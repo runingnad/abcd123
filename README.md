@@ -1,6 +1,6 @@
-# 🏥 MedCare - Healthcare Inventory Management System
+# 🏥 MedCare - Healthcare Management System
 
-A comprehensive blockchain-powered healthcare inventory management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
+A comprehensive blockchain-powered healthcare management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
 
 ## 🌟 Features
 
@@ -20,13 +20,13 @@ A comprehensive blockchain-powered healthcare inventory management system with i
 - **Total Items**: 1,389 tracked items
 - **Low Stock Alerts**: Real-time notifications
 - **Monthly Usage**: $54,320 analytics
-- **Inventory Value**: $312,450 tracking
+- **Value**: $312,450 tracking
 - **Clinical Trials Status**: Active trial monitoring
 - **Cold Chain Monitoring**: Real-time temperature tracking
 
-### 📦 Inventory Management
+### 📦 Management
 - **Add/Edit Items**: Complete CRUD operations
-- **Stock Tracking**: Real-time inventory levels
+- **Stock Tracking**: Real-time levels
 - **Category Management**: Antibiotics, Consumables, Diabetes Care, Equipment, Pain Management
 - **Status Indicators**: Good, Low, Critical stock levels
 - **Price Tracking**: Complete financial management
@@ -67,7 +67,7 @@ A comprehensive blockchain-powered healthcare inventory management system with i
 
 ### 📈 Analytics & Reports
 - **Usage Analytics**: Monthly and trend analysis
-- **Inventory Reports**: Comprehensive reporting
+- **Reports**: Comprehensive reporting
 - **Performance Metrics**: System performance tracking
 
 ---
@@ -206,4 +206,4 @@ For support and questions:
 
 ---
 
-**MedCare** - Revolutionizing healthcare inventory management with blockchain technology and real-time monitoring. 🏥✨
+**MedCare** - Revolutionizing healthcare management with blockchain technology and real-time monitoring. 🏥✨
