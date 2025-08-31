@@ -66,6 +66,9 @@ const Dashboard = ({ onLogout }) => {
     { id: 1, type: 'low_stock', message: 'Amoxicillin 500mg is running low (45 units left)', time: '5 min ago', severity: 'warning' },
     { id: 2, type: 'expiry', message: 'Insulin Pens expire in 30 days', time: '1 hour ago', severity: 'warning' },
     { id: 3, type: 'critical', message: 'Insulin Pens below critical threshold (12 units)', time: '2 hours ago', severity: 'critical' },
+    { id: 4, type: 'blockchain', message: 'New transaction recorded: BATCH001 approved', time: '15 min ago', severity: 'success' },
+    { id: 5, type: 'expiry', message: 'Insulin Pens expire in 30 days', time: '1 hour ago', severity: 'warning'},
+    { id: 6, type: 'critical', message: 'Insulin Pens below critical threshold (12 units)', time: '2 hours ago', severity: 'critical' },
   ];
 
   const notifications = [
@@ -124,10 +127,10 @@ const Dashboard = ({ onLogout }) => {
     { id: 'inventory', label: 'Inventory', icon: Package },
     { id: 'clinical-trials', label: 'Clinical Trials', icon: TestTube },
     { id: 'coldchain', label: 'Cold Chain', icon: Thermometer },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'ai-drug-verification', label: 'AI Drug Verification', icon: Camera },
     { id: 'patient-adherence', label: 'Patient Adherence', icon: UserCheck },
     { id: 'ai-analytics', label: 'AI Analytics', icon: Brain },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'alerts', label: 'Alerts', icon: Bell },
     { id: 'blockchain', label: 'Blockchain', icon: Shield },
     { id: 'users', label: 'Users', icon: Users },
