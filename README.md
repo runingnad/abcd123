@@ -1,8 +1,8 @@
-# 🏥 MedChain – AI + Blockchain Powered Healthcare Platform  
+# 🏥 MedCare – AI + Blockchain Powered Healthcare Platform  
 
 A next-generation healthcare management system unifying **blockchain, AI, and IoT** to ensure trust, safety, and efficiency in medical supply chains.  
 
-MedChain offers **secure clinical trial tracking, real-time cold-chain monitoring, AI-powered drug verification, and patient adherence tracking**, all accessible via a web dashboard and mobile app.  
+MedCare offers **secure clinical trial tracking, real-time cold-chain monitoring, AI-powered drug verification, and patient adherence tracking**, all accessible via a web dashboard and mobile app.  
 
 ---
 
@@ -110,7 +110,7 @@ MedChain offers **secure clinical trial tracking, real-time cold-chain monitorin
 
 ```bash
 git clone <repository-url>
-cd MedChain
+cd MedCare
 ```
 ### Backend
 ```bash
@@ -172,4 +172,4 @@ npx expo start
 
 ---
 
-⚡ With MedChain, healthcare providers gain a trusted, intelligent, and transparent ecosystem to secure trials, preserve vaccines, fight counterfeit drugs, and improve patient outcomes.
+⚡ With MedCare, healthcare providers gain a trusted, intelligent, and transparent ecosystem to secure trials, preserve vaccines, fight counterfeit drugs, and improve patient outcomes.
