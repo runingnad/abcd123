@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChakraProvider } from '@chakra-ui/react';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
@@ -25,19 +26,14 @@ function App() {
     setCurrentPage('login');
   };
 
-  if (currentPage === 'landing') {
-    return <LandingPage onLogin={handleShowLogin} />;
-  }
-
-  if (currentPage === 'login') {
-    return <LoginPage onLogin={handleLogin} onBack={handleBackToLanding} />;
-  }
-
-  if (currentPage === 'dashboard' && isAuthenticated) {
-    return <Dashboard onLogout={handleLogout} />;
-  }
-
-  return <LandingPage onLogin={handleShowLogin} />;
+  return (
+    <ChakraProvider>
+      {currentPage === 'landing' && <LandingPage onLogin={handleShowLogin} />}
+      {currentPage === 'login' && <LoginPage onLogin={handleLogin} onBack={handleBackToLanding} />}
+      {currentPage === 'dashboard' && isAuthenticated && <Dashboard onLogout={handleLogout} />}
+      {currentPage !== 'landing' && currentPage !== 'login' && currentPage !== 'dashboard' && <LandingPage onLogin={handleShowLogin} />}
+    </ChakraProvider>
+  );
 }
 
 export default App;

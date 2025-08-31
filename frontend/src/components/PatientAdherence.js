@@ -35,7 +35,7 @@ import {
   Minus, 
   AlertTriangle, 
   CheckCircle,
-  Microphone,
+  Mic,
   BarChart3
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -371,7 +371,7 @@ const PatientAdherence = () => {
                   <Button leftIcon={<BarChart3 />} variant="outline" flex={1}>
                     Barcode
                   </Button>
-                  <Button leftIcon={<Microphone />} variant="outline" flex={1}>
+                  <Button leftIcon={<Mic />} variant="outline" flex={1}>
                     Voice
                   </Button>
                 </HStack>
