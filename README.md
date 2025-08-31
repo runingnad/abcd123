@@ -1,204 +1,125 @@
-# 🏥 MedCare - Blockchain & AI Powered Healthcare Management System
+# MedCare: AI + Blockchain Powered Clinical Trial & Cold-Chain Management
 
-A comprehensive platform for clinical trial drug supply tracking and vaccine cold-chain monitoring, combining **Blockchain**, **AI/ML**, and **IoT** for next-generation healthcare reliability.
-
----
-
-## 👨‍💻 Development Team
-- **Shivam Bhardwaj** - 25BAI1526  
-- **Krrish Rajput** - 25BAIxxxx  
+## Team
+- Shivam Bhardwaj - 25BAI1526
+- Krrish Rajput - 25BAIxxxx
 
 ---
 
-## 🌟 Features
+## 🚀 Project Overview
 
-### 🏠 Landing Page
-- Modern, responsive UI with professional healthcare branding
-- Light/Dark mode toggle
-- Dynamic animations with smooth transitions
-- Call-to-action sections with statistics and demo highlights
-
-### 🔐 Authentication
-- Dummy login system (demo-ready)
-- Default credentials: `admin` / `admin123`
-
-### 📊 Dashboard Overview
-- Drug batches tracked via blockchain
-- Cold-chain monitoring with live IoT data
-- Alerts & notifications for risk/expiry
-- Quick access to analytics and reports
-
-### 🧪 Clinical Trial Supply
-- Log new drug batches with sender/receiver info
-- Regulator approval workflow
-- Blockchain-backed ledger for immutability
-- Complete audit trail for compliance
-
-### 🌡️ Cold-Chain Monitoring
-- Real-time temperature & humidity graph
-- AI-powered **Safe vs. Spoiled** classification
-- Confidence scores from ML model
-- Individual batch-level tracking
-- WebSocket-based live updates
-
-### 🔔 Alerts System
-- Expiry warnings
-- Cold-chain anomaly detection
-- Blockchain transaction alerts
-- Real-time notifications
-
-### ⛓️ Blockchain Activity
-- Transaction history with timestamps
-- Batch approval logs
-- Regulator vs. supplier role enforcement
-- Hash-based verification
-
-### 📈 Analytics & Reports
-- Usage patterns
-- Risk prediction stats
-- Inventory & trial reports
+**MedCare** is an innovative platform that integrates **Blockchain, Artificial Intelligence, and IoT** to ensure **secure clinical trial drug supply management** and **reliable vaccine cold-chain monitoring**.  
+Built for healthcare institutions and regulators, MedCare improves **trust, transparency, and efficiency** in clinical trials and medical supply logistics.
 
 ---
 
-## 🚀 Quick Start
+## 🏥 Problem Statement
 
-### Prerequisites
-- Node.js (v14+)
-- Python 3.8+
-- PostgreSQL
-- npm / yarn
-
-### Installation
-
-1. **Clone Repository**
-```bash
-git clone <repository-url>
-cd MedCare
-```
-
-2. **Backend Setup**
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate   # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-3. **Frontend Setup**
-```bash
-cd frontend
-npm install
-```
-
-4. **Run Application**
-```bash
-# Backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Frontend
-npm start
-```
-
-5. **Access**
-- Frontend → http://localhost:3000  
-- Backend API → http://localhost:8000  
-- API Docs → http://localhost:8000/docs  
+- **Clinical Trials** face fraud, tampering, and lack of transparency.  
+- **Vaccine Supply Chains** often fail due to cold-chain breaches, leading to spoilage and loss.  
+- Current systems are siloed and do not leverage advanced AI/ML for decision-making.
 
 ---
 
-## 📡 API Endpoints
+## 💡 Our Solution
 
-### 🧪 Clinical Trials
+MedCare combines **Blockchain for immutable drug supply records** with **AI-powered cold-chain safety analysis**, creating a next-gen healthcare management system.
 
-- `GET /trials` → Get all batches  
-- `POST /trials` → Add new batch  
-- `PUT /trials/{batch_id}/approve` → Approve batch  
-- `GET /trials/{batch_id}` → Get batch details  
+### Key Features
+1. **Blockchain-Based Clinical Trial Drug Supply**
+   - Immutable ledger of drug batches.
+   - Role-based actions (Supplier, Regulator).
+   - Transparent approval workflow.
 
-### 🌡️ Cold-Chain Monitoring
+2. **AI-Powered Cold-Chain Monitoring**
+   - Real-time IoT data ingestion (temperature, humidity).
+   - ML model predicts **Safe vs Spoiled** batches.
+   - Alerts for threshold breaches.
 
-- `POST /coldchain/data` → Add sensor data  
-- `GET /coldchain/data/{batch_id}` → Get sensor readings  
-- `GET /coldchain/risk?batch_id={id}` → Risk assessment  
-- `POST /coldchain/predict` → ML model prediction  
-- `GET /coldchain/test` → Validate ML model  
-
-### 🔔 Alerts
-- `GET /alerts` → Active alerts  
-- `POST /alerts` → Create alert  
-- `PUT /alerts/{id}/resolve` → Resolve alert  
-
-### ⛓️ Blockchain
-- `GET /blockchain/activity` → All blockchain transactions  
-- `GET /blockchain/transaction/{hash}` → Transaction details  
+3. **Future-Ready AI Enhancements (Planned)**
+   - Voice-based prescription manager.
+   - Image-based drug verification.
+   - AI-powered patient medication adherence tracker.
 
 ---
 
-## 🤖 Machine Learning Model
+## 🛠️ Tech Stack
 
-- **Task**: Binary classification (Safe vs Spoiled)  
-- **Features**: Temperature (°C), Humidity (%)  
-- **Training Data**: `batch_data.csv`  
-- **Model Files**: `model.pkl`, `scaler.pkl`  
-- **API Routes**:
-  - `POST /coldchain/predict` → Predict Safe/Spoiled with confidence  
-  - `GET /coldchain/test` → Model test endpoint  
-
-Training Script:
-```bash
-cd backend
-python3 train_model.py
-```
-
-Model Accuracy: ~78% training, ~65% testing  
+- **Frontend:** React + Tailwind (Dashboard UI)  
+- **Backend:** FastAPI (REST APIs)  
+- **Database:** PostgreSQL  
+- **Blockchain:** Solidity Smart Contracts (deployed via Thirdweb)  
+- **AI/ML:** Hugging Face AutoTrain Model  
+- **IoT Simulation:** Ubidots Device Simulator  
 
 ---
 
-## 🎨 Tech Stack
+## 🔗 System Architecture
 
-### Frontend
-- React + TailwindCSS  
-- Recharts (data visualization)  
-- Framer Motion (animations)  
+**Frontend → Backend → Blockchain + AI → Database**  
 
-### Backend
-- FastAPI (Python)  
-- PostgreSQL  
-- scikit-learn (ML)  
-- WebSockets (live updates)  
-- Thirdweb (Blockchain integration)  
+### Example API Endpoints
+- `/trials`
+  - **POST** → Add new batch  
+  - **GET** → Fetch all batches  
+  - **PUT** → Approve a batch  
 
-### IoT & AI
-- Ubidots (simulated IoT data)  
-- Hugging Face AutoTrain (risk model API)  
+- `/coldchain`
+  - **POST** → Ingest IoT data (temp, humidity)  
+  - **GET** → AI model inference (Safe/Spoiled)  
 
 ---
 
-## 🚀 Deployment
+## 📊 Workflow
 
-### Env Variables
-```bash
-DATABASE_URL=postgresql://user:password@localhost/medcare
-SECRET_KEY=super-secret-key
-REACT_APP_API_URL=http://localhost:8000
-```
-
-### Build Frontend
-```bash
-cd frontend
-npm run build
-```
-
-### Run Backend in Production
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+1. Supplier logs a new batch (sent to blockchain).  
+2. Regulator approves batch (immutable record stored).  
+3. IoT devices send live cold-chain data.  
+4. Backend forwards data to AI model → classification (Safe/Spoiled).  
+5. Dashboard visualizes supply status and risk alerts.  
 
 ---
 
-## 📝 License
-MIT License
+## 📂 Project Structure
+
+MedCare/
+│── backend/ (FastAPI routes, DB models)
+│── frontend/ (React + Tailwind dashboard)
+│── contracts/ (Solidity smart contracts)
+│── ai-model/ (Hugging Face API integration)
+│── iot-sim/ (Ubidots device simulator configs)
+│── README.md (Project documentation)
+
+yaml
+Copy code
 
 ---
 
-**MedCare** – Secure Clinical Trials & Cold-Chain Monitoring with Blockchain + AI 🚀
+## ⚡ Demo Use Cases
+
+- A regulator approves a clinical trial drug shipment on-chain.  
+- IoT sensors detect vaccine batch temperature rising → AI flags as “Spoiled”.  
+- Dashboard updates in real-time with alerts.  
+
+---
+
+## 📌 Future Scope
+
+- Mobile app with voice prescription management.  
+- Advanced anomaly detection in cold-chain datasets.  
+- AI-powered medication adherence and reminders.  
+- Integration with hospital EHR systems.  
+
+---
+
+## 🙌 Contributors
+
+- Shivam Bhardwaj (25BAI1526)  
+- Krrish Rajput (25BAIxxxx)  
+
+---
+
+## 🏆 Hackathon Ready
+
+This project is designed as a **hackathon-ready prototype** with extendable architecture for production deployment.  
+Our goal is to **enhance transparency, safety, and trust** in healthcare supply chains.
