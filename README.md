@@ -135,39 +135,41 @@ npx expo start
 ```
 ## Access
 
--Frontend: http://localhost:3000
--Backend API: http://localhost:8000
--API Docs: http://localhost:8000/docs
--Mobile App: Scan QR via Expo Go
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- Mobile App: Scan QR via Expo Go
 
 ## 📡 Key API Endpoints
 
--POST /auth/login – Authenticate user
--GET /inventory/items – Fetch all items
--POST /trials – Add new clinical trial batch
--PUT /trials/{batch_id}/approve – Approve batch (regulator)
--POST /coldchain/predict – AI risk prediction
--POST /ai/drug-verification – Upload image for drug verification
--POST /ai/patient-adherence – Track patient intake
--GET /alerts – Fetch all active alerts
+- POST /auth/login – Authenticate user
+- GET /inventory/items – Fetch all items
+- POST /trials – Add new clinical trial batch
+- PUT /trials/{batch_id}/approve – Approve batch (regulator)
+- POST /coldchain/predict – AI risk prediction
+- POST /ai/drug-verification – Upload image for drug verification
+- POST /ai/patient-adherence – Track patient intake
+- GET /alerts – Fetch all active alerts
 
 ## 📱 Screenshots
 
--Dashboard Overview
+- Dashboard Overview
 
--Cold-chain monitoring graph
+- Cold-chain monitoring graph
 
--AI drug verification result
+- AI drug verification result
 
--Mobile adherence tracker
+- Mobile adherence tracker
 
 ## 📞 Support
--Create an issue in repo
--Contact dev team
--API docs available at /docs
+- Create an issue in repo
+- Contact dev team
+- API docs available at /docs
 
 ## 📝 License
 
--MIT License
+- MIT License
+
+---
 
 ⚡ With MedChain, healthcare providers gain a trusted, intelligent, and transparent ecosystem to secure trials, preserve vaccines, fight counterfeit drugs, and improve patient outcomes.
