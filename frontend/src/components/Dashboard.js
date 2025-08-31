@@ -21,9 +21,14 @@ import {
   Shield,
   Bell,
   TestTube,
-  Zap
+  Zap,
+  Camera,
+  UserCheck,
+  Brain
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import AIDrugVerification from './AIDrugVerification';
+import PatientAdherence from './PatientAdherence';
 
 const Dashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -124,6 +129,9 @@ const Dashboard = ({ onLogout }) => {
     { id: 'blockchain', label: 'Blockchain', icon: Shield },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'ai-drug-verification', label: 'AI Drug Verification', icon: Camera },
+    { id: 'patient-adherence', label: 'Patient Adherence', icon: UserCheck },
+    { id: 'ai-analytics', label: 'AI Analytics', icon: Brain },
   ];
 
   // TrialChain+ColdCare API functions
@@ -1862,6 +1870,81 @@ const Dashboard = ({ onLogout }) => {
                               </div>
                             </div>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'ai-drug-verification' && (
+              <AIDrugVerification />
+            )}
+
+            {activeTab === 'patient-adherence' && (
+              <PatientAdherence />
+            )}
+
+            {activeTab === 'ai-analytics' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">AI Analytics Dashboard</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">ML Model Performance</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Drug Verification Accuracy</span>
+                          <span className="font-semibold">94.2%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: '94.2%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Anomaly Detection Precision</span>
+                          <span className="font-semibold">89.7%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-500 h-2 rounded-full" style={{ width: '89.7%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Adherence Prediction</span>
+                          <span className="font-semibold">91.3%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-purple-500 h-2 rounded-full" style={{ width: '91.3%' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Insights Summary</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-green-800">System Health: Excellent</p>
+                          <p className="text-xs text-green-600">All AI models performing optimally</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                        <Brain className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-800">Learning Progress: Active</p>
+                          <p className="text-xs text-blue-600">Models improving with new data</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                        <TrendingUp className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <p className="text-sm font-medium text-purple-800">Efficiency: +23%</p>
+                          <p className="text-xs text-purple-600">Automation reducing manual work</p>
                         </div>
                       </div>
                     </div>

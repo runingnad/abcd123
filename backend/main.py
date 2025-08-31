@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -9,6 +9,11 @@ from datetime import datetime, timedelta
 import uuid
 import joblib
 import pandas as pd
+import numpy as np
+import base64
+import io
+from PIL import Image
+import cv2
 import numpy as np
 
 
@@ -611,6 +616,171 @@ async def generate_fake_sensor_data():
             }))
         
         await asyncio.sleep(5)
+
+# New Pydantic models for AI features
+class DrugVerificationRequest(BaseModel):
+    image_data: str  # Base64 encoded image
+    expected_drug_name: Optional[str] = None
+    expected_dosage: Optional[str] = None
+
+class DrugVerificationResponse(BaseModel):
+    verified: bool
+    confidence_score: float
+    detected_drug_name: str
+    detected_dosage: str
+    label_quality: str
+    color_match: str
+    shape_match: str
+    recommendations: List[str]
+
+class AnomalyDetectionRequest(BaseModel):
+    batch_id: str
+    temperature: float
+    humidity: float
+    timestamp: str
+
+class AnomalyDetectionResponse(BaseModel):
+    is_anomaly: bool
+    risk_level: str  # LOW, MEDIUM, HIGH, CRITICAL
+    confidence: float
+    factors: List[str]
+    recommendations: List[str]
+
+class PatientAdherenceRequest(BaseModel):
+    patient_id: str
+    medication_name: str
+    dosage: str
+    intake_time: str
+    method: str  # manual, barcode, voice
+
+class PatientAdherenceResponse(BaseModel):
+    adherence_score: float
+    missed_doses: int
+    trend: str  # improving, declining, stable
+    next_dose_reminder: str
+    risk_factors: List[str]
+
+# AI-Powered Drug Verification
+@app.post("/ai/drug-verification", response_model=DrugVerificationResponse)
+async def verify_drug_image(request: DrugVerificationRequest):
+    try:
+        # Decode base64 image
+        image_data = base64.b64decode(request.image_data.split(',')[1] if ',' in request.image_data else request.image_data)
+        image = Image.open(io.BytesIO(image_data))
+        
+        # Simulate AI drug verification (replace with actual ML model)
+        # In production, this would use computer vision and OCR
+        verification_result = {
+            "verified": random.choice([True, True, True, False]),  # 75% success rate
+            "confidence_score": round(random.uniform(0.7, 0.98), 2),
+            "detected_drug_name": "Amoxicillin 500mg" if random.random() > 0.5 else "Ibuprofen 200mg",
+            "detected_dosage": "500mg" if random.random() > 0.5 else "200mg",
+            "label_quality": random.choice(["Excellent", "Good", "Fair"]),
+            "color_match": random.choice(["Perfect", "Good", "Acceptable"]),
+            "shape_match": random.choice(["Exact", "Close", "Similar"]),
+            "recommendations": [
+                "Label is clearly visible and matches expected medication",
+                "Dosage information is accurate",
+                "Expiry date is within acceptable range"
+            ]
+        }
+        
+        return DrugVerificationResponse(**verification_result)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Image processing failed: {str(e)}")
+
+# AI-Powered Anomaly Detection
+@app.post("/ai/anomaly-detection", response_model=AnomalyDetectionResponse)
+async def detect_anomalies(request: AnomalyDetectionRequest):
+    try:
+        # Simulate AI anomaly detection (replace with actual ML model)
+        temp_anomaly = abs(request.temperature - 5.0) > 3.0
+        humidity_anomaly = abs(request.humidity - 50.0) > 20.0
+        
+        is_anomaly = temp_anomaly or humidity_anomaly
+        
+        if is_anomaly:
+            risk_level = "CRITICAL" if (temp_anomaly and humidity_anomaly) else "HIGH"
+            factors = []
+            if temp_anomaly:
+                factors.append("Temperature deviation from safe range (2-8°C)")
+            if humidity_anomaly:
+                factors.append("Humidity outside acceptable limits (30-70%)")
+            
+            recommendations = [
+                "Immediately check refrigeration system",
+                "Move batch to backup cold storage if available",
+                "Contact maintenance team for urgent repair"
+            ]
+        else:
+            risk_level = "LOW"
+            factors = ["All parameters within normal range"]
+            recommendations = ["Continue monitoring", "Maintain current settings"]
+        
+        return AnomalyDetectionResponse(
+            is_anomaly=is_anomaly,
+            risk_level=risk_level,
+            confidence=round(random.uniform(0.8, 0.95), 2),
+            factors=factors,
+            recommendations=recommendations
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Anomaly detection failed: {str(e)}")
+
+# AI-Powered Patient Adherence Tracking
+@app.post("/ai/patient-adherence", response_model=PatientAdherenceResponse)
+async def track_patient_adherence(request: PatientAdherenceRequest):
+    try:
+        # Simulate AI adherence analysis (replace with actual ML model)
+        base_adherence = random.uniform(0.6, 0.95)
+        missed_doses = random.randint(0, 5)
+        
+        if base_adherence > 0.8:
+            trend = "improving"
+        elif base_adherence < 0.7:
+            trend = "declining"
+        else:
+            trend = "stable"
+        
+        # Calculate next dose reminder
+        next_dose = datetime.now() + timedelta(hours=random.randint(4, 12))
+        
+        risk_factors = []
+        if base_adherence < 0.8:
+            risk_factors.append("Multiple missed doses detected")
+        if request.method == "manual":
+            risk_factors.append("Manual entry may have errors")
+        
+        return PatientAdherenceResponse(
+            adherence_score=round(base_adherence, 2),
+            missed_doses=missed_doses,
+            trend=trend,
+            next_dose_reminder=next_dose.strftime("%Y-%m-%d %H:%M"),
+            risk_factors=risk_factors
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Adherence tracking failed: {str(e)}")
+
+# Get patient adherence history
+@app.get("/ai/patient-adherence/{patient_id}")
+async def get_patient_adherence_history(patient_id: str):
+    # Simulate patient adherence history
+    history = []
+    for i in range(30):
+        date = datetime.now() - timedelta(days=i)
+        adherence = random.uniform(0.7, 0.95)
+        history.append({
+            "date": date.strftime("%Y-%m-%d"),
+            "adherence_score": round(adherence, 2),
+            "medications_taken": random.randint(1, 3),
+            "total_medications": 3
+        })
+    
+    return {
+        "patient_id": patient_id,
+        "history": history,
+        "overall_adherence": round(sum(h["adherence_score"] for h in history) / len(history), 2)
+    }
 
 if __name__ == "__main__":
     import uvicorn
