@@ -652,7 +652,7 @@ const Dashboard = ({ onLogout }) => {
             <div className="flex items-center space-x-4">
               <div className="text-2xl font-bold text-gray-900">
                 <span className="text-blue-600">Med</span>
-                <span className="text-green-600">Chain</span>
+                <span className="text-green-600">Care</span>
               </div>
               <div className="h-6 w-px bg-gray-300"></div>
               <div className="text-sm text-gray-600">
