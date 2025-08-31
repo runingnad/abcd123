@@ -134,7 +134,7 @@ const LandingPage = ({ onLogin }) => {
 
   const testimonials = [
     {
-      quote: "MedChain has revolutionized our inventory management. The blockchain transparency gives us complete confidence in our supply chain.",
+      quote: "MedCare has revolutionized our inventory management. The blockchain transparency gives us complete confidence in our supply chain.",
       author: "Dr. Sarah Johnson",
       role: "Chief Medical Officer",
       hospital: "City General Hospital"
@@ -547,7 +547,7 @@ const LandingPage = ({ onLogin }) => {
         >
           <h2 className={`text-4xl font-bold mb-4 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>Why Choose MedChain?</h2>
+          }`}>Why Choose MedCare?</h2>
           <p className={`text-xl max-w-2xl mx-auto ${
             isDarkMode ? 'text-white/70' : 'text-gray-600'
           }`}>
@@ -598,7 +598,7 @@ const LandingPage = ({ onLogin }) => {
           <p className={`text-xl max-w-2xl mx-auto ${
             isDarkMode ? 'text-white/70' : 'text-gray-600'
           }`}>
-            See what healthcare professionals are saying about MedChain
+            See what healthcare professionals are saying about MedCare
           </p>
         </motion.div>
 
