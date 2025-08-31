@@ -10,7 +10,7 @@ import {
   Animated
 } from 'react-native';
 import { Card, Button, Title, Paragraph, Badge, ProgressBar, Chip } from 'react-native-paper';
-import { Thermometer, Droplets, Shield, AlertTriangle, Zap, TrendingUp, TrendingDown } from 'lucide-react';
+import { Thermometer, Droplets, Shield, AlertTriangle, Zap, TrendingUp, TrendingDown } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { LineChart } from 'react-native-chart-kit';
 import { coldChainAPI } from '../services/api';

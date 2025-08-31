@@ -9,11 +9,12 @@ import {
   Dimensions
 } from 'react-native';
 import { Card, Button, Title, Paragraph, Badge, ProgressBar, TextInput, SegmentedButtons } from 'react-native-paper';
-import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Microphone, BarChart3, User } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, Mic, BarChart3, User } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { LineChart } from 'react-native-chart-kit';
 
-const { width } = Dimensions.get('window');
+
+const { width, height } = Dimensions.get('window');
 
 const PatientAdherenceScreen = () => {
   const [patients, setPatients] = useState([]);
@@ -395,7 +396,7 @@ const PatientAdherenceScreen = () => {
                 buttons={[
                   { value: 'manual', label: 'Manual', icon: BarChart3 },
                   { value: 'barcode', label: 'Barcode', icon: BarChart3 },
-                  { value: 'voice', label: 'Voice', icon: Microphone }
+                  { value: 'voice', label: 'Voice', icon: Mic }
                 ]}
                 style={styles.segmentedButtons}
               />

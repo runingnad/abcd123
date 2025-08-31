@@ -5,8 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider, DefaultTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform, Device } from 'expo-device';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
+import * as Device from 'expo-device';
 
 // Import screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -92,17 +93,22 @@ export default function App() {
   const theme = isDarkMode ? MD3DarkTheme : DefaultTheme;
 
   return (
-    <PaperProvider theme={theme}>
-      <ThemeContext.Provider value={{ isDarkMode, setIsDarkMode }}>
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
-          <NavigationContainer theme={theme}>
-            <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-            {isAuthenticated ? <TabNavigator /> : <LoginScreen />}
-          </NavigationContainer>
-        </AuthContext.Provider>
-      </ThemeContext.Provider>
-    </PaperProvider>
-  );
+  <PaperProvider
+    theme={theme}
+    settings={{
+      icon: (props) => <MaterialCommunityIcons {...props} />,
+    }}
+  >
+    <ThemeContext.Provider value={{ isDarkMode, setIsDarkMode }}>
+      <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+        <NavigationContainer theme={theme}>
+          <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+          {isAuthenticated ? <TabNavigator /> : <LoginScreen />}
+        </NavigationContainer>
+      </AuthContext.Provider>
+    </ThemeContext.Provider>
+  </PaperProvider>
+);
 }
 
 async function registerForPushNotificationsAsync() {

@@ -11,7 +11,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Card, Button, Title, Paragraph, Badge, ProgressBar } from 'react-native-paper';
-import { Camera, Upload, CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { Camera, Upload, CheckCircle, AlertTriangle, Info, X } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
