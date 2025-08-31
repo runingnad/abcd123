@@ -187,7 +187,7 @@ const LandingPage = ({ onLogin }) => {
             <span className={`bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent ${
               isDarkMode ? 'from-purple-400 to-pink-400' : 'from-purple-600 to-pink-600'
             }`}>
-              Chain
+              Care
             </span>
           </motion.div>
 
