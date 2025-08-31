@@ -125,13 +125,13 @@ const Dashboard = ({ onLogout }) => {
     { id: 'clinical-trials', label: 'Clinical Trials', icon: TestTube },
     { id: 'coldchain', label: 'Cold Chain', icon: Thermometer },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'ai-drug-verification', label: 'AI Drug Verification', icon: Camera },
+    { id: 'patient-adherence', label: 'Patient Adherence', icon: UserCheck },
+    { id: 'ai-analytics', label: 'AI Analytics', icon: Brain },
     { id: 'alerts', label: 'Alerts', icon: Bell },
     { id: 'blockchain', label: 'Blockchain', icon: Shield },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'ai-drug-verification', label: 'AI Drug Verification', icon: Camera },
-    { id: 'patient-adherence', label: 'Patient Adherence', icon: UserCheck },
-    { id: 'ai-analytics', label: 'AI Analytics', icon: Brain },
   ];
 
   // TrialChain+ColdCare API functions
