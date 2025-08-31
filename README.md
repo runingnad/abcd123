@@ -1,174 +1,198 @@
+
 # 🏥 MedCare – AI + Blockchain Powered Healthcare Platform  
 
-A next-generation healthcare management system unifying **blockchain, AI, and IoT** to ensure trust, safety, and efficiency in medical supply chains.  
+MedCare is a **production-ready healthcare system** that unifies **blockchain, AI, IoT, and real-time dashboards** to bring **trust, safety, and efficiency** into medical supply chains, clinical trials, and patient care.  
 
-MedCare offers **secure clinical trial tracking, real-time cold-chain monitoring, AI-powered drug verification, and patient adherence tracking**, all accessible via a web dashboard and mobile app.  
-
----
-
-## 🌟 Core Features  
-
-### 🔐 Authentication & Access Control  
-- Role-based access (Admin, Regulator, Healthcare Staff, Patients)  
-- Secure login with session management  
-- Demo credentials: `admin` / `admin123`  
-
-### 📊 Intelligent Dashboard  
-- Inventory overview (items, stock levels, usage, financials)  
-- Clinical trials status tracking  
-- Cold-chain health monitoring  
-- AI analytics & predictions  
-- Real-time alerts for risks, stockouts, and expiry  
-
-### 📦 Inventory Management  
-- Full CRUD operations for medical items  
-- Categories: Antibiotics, Consumables, Diabetes Care, Equipment, Pain Management  
-- Price + stock tracking with thresholds (Good, Low, Critical)  
-- Expiry management and alerts  
-
-### 🧪 Clinical Trial Supply Tracking  
-- Log and monitor drug batches  
-- Blockchain-secured shipment approval & regulator verification  
-- Immutable audit trails for transparency  
-- Role-based approvals  
-
-### 🌡️ Cold-Chain Monitoring  
-- Real-time temperature & humidity tracking  
-- AI-powered risk predictions for spoilage  
-- Anomaly detection with live alerts  
-- Batch-specific monitoring with color-coded statuses (Safe / Warning / Critical)  
-
-### 🤖 AI-Powered Innovations  
-- **Drug Verification**: Upload or capture medicine images → AI verifies authenticity  
-- **Cold-Chain Anomaly Detection**: Detects risky fluctuations before spoilage occurs  
-- **Patient Adherence Tracking**: Logs medication intake, predicts adherence trends, and notifies staff of missed doses  
-- **Predictive Analytics**: Smart recommendations for inventory & patient management  
-
-### 📱 Mobile App (React Native)  
-- Cross-platform (iOS + Android via Expo)  
-- Push notifications for alerts and reminders  
-- Camera integration for drug verification  
-- Offline data caching & auto-sync  
-- Patient-friendly interface with adherence tracker  
-
-### 🔔 Alerts & Notifications  
-- Stockout, expiry, and anomaly alerts  
-- Browser + mobile push notifications  
-- Automated escalation for critical cases  
-
-### ⛓️ Blockchain Integration  
-- Immutable audit trail for all critical events  
-- Batch verification for clinical trials  
-- Transaction history with cryptographic verification  
-
-### 📈 Reports & Analytics  
-- Usage trends, monthly costs, and waste reduction  
-- AI model performance & accuracy reports  
-- Patient adherence statistics  
-- Exportable reports for regulators  
+This platform ensures **secure tracking, smart predictions, and transparency** — solving challenges like **drug counterfeiting, cold-chain spoilage, and patient non-adherence**.  
 
 ---
 
-## 🖥️ Technology Stack  
+## 🌟 Features Overview  
 
-### Frontend  
-- React 18, Tailwind CSS, Chakra UI, Framer Motion  
-- Recharts (data visualization), WebSockets (real-time updates)  
+### 1. Authentication & Roles  
+- Role-based login (Admin, Regulator, Staff, Patient)  
+- JWT token-based authentication  
+- Session handling with FastAPI security middleware  
 
-### Mobile  
-- React Native (Expo)  
-- React Native Paper, Notifications, Camera API  
-- Offline-first data sync  
+### 2. Inventory Management  
+- CRUD operations for items  
+- Auto-classification of stock levels (Good, Low, Critical)  
+- Expiry detection and alerts  
+- Batch-tracking integrated with blockchain  
 
-### Backend  
-- FastAPI + Uvicorn (Python)  
-- PostgreSQL database  
-- WebSocket real-time communication  
-- scikit-learn, Pandas, NumPy (ML models)  
-- OpenCV, Pillow (drug image verification)  
+### 3. Clinical Trial Drug Supply  
+- Create and approve batches  
+- Blockchain-backed approval workflow  
+- Immutable logs of regulators and stakeholders  
 
-### AI Models  
-- Logistic Regression for cold-chain risk prediction  
-- Computer vision models (drug recognition)  
-- Predictive analytics for patient adherence  
+### 4. Cold-Chain Monitoring  
+- IoT-like simulated sensors (temperature + humidity)  
+- AI/ML model predicts spoilage risk (Safe, Warning, Critical)  
+- Alerts when anomalies detected  
 
-### Blockchain  
-- Thirdweb / EVM-compatible chain  
-- Transaction history & verification  
+### 5. AI-Powered Enhancements  
+- **Drug Verification (CV model)** → Upload image, system verifies authenticity  
+- **Cold-chain anomaly detection** → Logistic regression + thresholds  
+- **Patient Adherence Tracking** → Logs intake, predicts risk of non-adherence  
+- **Predictive Analytics** → Suggests inventory restocking, patient risk prediction  
+
+### 6. Mobile App  
+- React Native (Expo) app for patients + staff  
+- Push notifications for stockouts, spoilage, reminders  
+- Camera integration for **drug verification**  
+- Offline support with sync  
+
+### 7. Blockchain Integration  
+- Thirdweb smart contracts deployed on testnet  
+- Approval transactions recorded on-chain  
+- Verifiable transaction hash for audits  
+
+---
+
+## 🖥️ System Architecture  
+
+```
+Frontend (React + Tailwind + Recharts)
+        |
+        v
+Backend API (FastAPI + PostgreSQL)
+        |
+   AI Models (scikit-learn, OpenCV)
+        |
+   Blockchain (Thirdweb, EVM)
+        |
+   Mobile App (React Native + Expo)
+```
+
+- **Frontend** → Dashboard for staff, regulators, and admins  
+- **Backend** → REST APIs + AI inference endpoints  
+- **AI Models** → Deployed locally for prediction  
+- **Blockchain** → Stores approvals + audit logs  
+- **Mobile App** → Patient adherence & drug verification  
 
 ---
 
 ## 🚀 Quick Start  
 
 ### Prerequisites  
-- Node.js (v14+)  
-- Python 3.8+  
-- npm or yarn  
+- Python 3.9+  
+- Node.js 16+  
+- PostgreSQL  
 - Expo CLI (for mobile)  
 
 ### Installation  
 
 ```bash
-git clone <repository-url>
+git clone <repo-url>
 cd MedCare
 ```
-### Backend
+
+#### Backend  
 ```bash
 cd backend
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python3 train_model.py
 uvicorn main:app --reload --port 8000
 ```
-### Frontend
+
+#### Frontend  
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
-### Mobile
-```
+
+#### Mobile  
+```bash
 cd mobile
 npm install
 npx expo start
 ```
-## Access
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Mobile App: Scan QR via Expo Go
+---
 
-## 📡 Key API Endpoints
+## 📡 API Endpoints (Detailed)  
 
-- POST /auth/login – Authenticate user
-- GET /inventory/items – Fetch all items
-- POST /trials – Add new clinical trial batch
-- PUT /trials/{batch_id}/approve – Approve batch (regulator)
-- POST /coldchain/predict – AI risk prediction
-- POST /ai/drug-verification – Upload image for drug verification
-- POST /ai/patient-adherence – Track patient intake
-- GET /alerts – Fetch all active alerts
+### Authentication  
+- `POST /auth/login` → Get JWT token  
+- `POST /auth/register` → Create new user  
 
-## 📱 Screenshots
+### Inventory  
+- `GET /inventory/items` → Fetch items  
+- `POST /inventory/items` → Add item  
+- `PUT /inventory/items/{id}` → Update item  
+- `DELETE /inventory/items/{id}` → Remove item  
 
-- Dashboard Overview
+### Clinical Trials  
+- `POST /trials` → Create batch  
+- `PUT /trials/{id}/approve` → Approve batch (regulator)  
+- `GET /trials/{id}` → Fetch batch details  
 
-- Cold-chain monitoring graph
+### Cold Chain  
+- `POST /coldchain/record` → Add temp+humidity log  
+- `POST /coldchain/predict` → Run AI risk prediction  
+- `GET /coldchain/batch/{id}` → Batch status  
 
-- AI drug verification result
+### AI Features  
+- `POST /ai/drug-verification` → Upload drug image, get authenticity result  
+- `POST /ai/patient-adherence` → Log intake event  
+- `GET /ai/patient-adherence/{id}` → Get adherence trend  
 
-- Mobile adherence tracker
+### Alerts  
+- `GET /alerts` → Fetch all alerts  
+- `POST /alerts/test` → Trigger test alert  
 
-## 📞 Support
-- Create an issue in repo
-- Contact dev team
-- API docs available at /docs
+---
 
-## 📝 License
+## 📈 AI Models  
 
-- MIT License
+- **Cold Chain Risk Prediction**  
+  - Logistic Regression on temperature + humidity  
+  - Labels: `Safe`, `Warning`, `Critical`  
+
+- **Drug Verification**  
+  - OpenCV feature matching + pretrained CNN model  
+  - Detects counterfeit or mismatched packaging  
+
+- **Patient Adherence**  
+  - Uses intake logs + ML prediction  
+  - Forecasts risk of non-adherence (high/medium/low)  
+
+---
+
+## 📊 Reports & Analytics  
+
+- Stock usage trends  
+- Monthly spending & wastage report  
+- AI model accuracy (confusion matrix)  
+- Patient adherence heatmap  
+- Cold-chain anomaly detection graphs  
+
+---
+
+## 📝 Hackathon Pitch Value  
+
+- 🚑 Solves **real-world healthcare issues** (counterfeits, spoilage, non-adherence)  
+- 🔗 **Blockchain-powered trust** → regulators + providers can audit securely  
+- 🤖 **AI-powered intelligence** → predictions, verification, and insights  
+- 📱 **Mobile-first** → patient engagement and safety tracking  
+
+---
+
+## 📞 Support  
+
+- Dev Team: 
+- -> Shivam Bhardwaj - 25BAI1526
+- -> Krrish Rajput -25BAI 
+
+- Issues: Use GitHub Issues tab  
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)  
+
+---
+
+## 📜 License  
+MIT License  
 
 ---
 
