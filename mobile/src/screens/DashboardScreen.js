@@ -6,6 +6,7 @@ import {
   RefreshControl,
   Dimensions,
   Animated,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Card,
@@ -135,6 +136,7 @@ const DashboardScreen = ({ navigation }) => {
       paddingTop: 60,
       paddingBottom: 30,
       paddingHorizontal: 20,
+      zIndex: 1,
     },
     headerTitle: {
       color: 'white',
@@ -147,22 +149,31 @@ const DashboardScreen = ({ navigation }) => {
       fontSize: 16,
       fontWeight: '400',
     },
-    content: {
+    scrollContainer: {
       flex: 1,
+    },
+    scrollContent: {
       paddingHorizontal: 16,
-      marginTop: -20,
+      paddingTop: 20,
+      paddingBottom: 40,
     },
     statsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
       marginBottom: 24,
+      paddingTop: 8,
     },
     statCard: {
       width: (width - 48) / 2,
       marginBottom: 16,
       borderRadius: 20,
       overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     statCardContent: {
       padding: 20,
@@ -202,6 +213,11 @@ const DashboardScreen = ({ navigation }) => {
       marginBottom: 12,
       borderRadius: 16,
       overflow: 'hidden',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
     },
     alertContent: {
       padding: 16,
@@ -229,6 +245,7 @@ const DashboardScreen = ({ navigation }) => {
     },
     quickActionsContainer: {
       marginBottom: 24,
+      marginTop: 8,
     },
     quickActionsGrid: {
       flexDirection: 'row',
@@ -239,10 +256,21 @@ const DashboardScreen = ({ navigation }) => {
       marginHorizontal: 6,
       borderRadius: 16,
       overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    actionGradient: {
+      flex: 1,
+      borderRadius: 16,
     },
     actionContent: {
       padding: 20,
       alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 80,
     },
     actionIcon: {
       marginBottom: 12,
@@ -256,6 +284,11 @@ const DashboardScreen = ({ navigation }) => {
     systemStatusCard: {
       marginBottom: 20,
       borderRadius: 16,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
     },
     statusItem: {
       flexDirection: 'row',
@@ -287,7 +320,8 @@ const DashboardScreen = ({ navigation }) => {
       </LinearGradient>
 
       <ScrollView
-        style={styles.content}
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -297,10 +331,7 @@ const DashboardScreen = ({ navigation }) => {
         <Animated.View 
           style={[
             styles.statsGrid,
-            { 
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+            { opacity: fadeAnim }
           ]}
         >
           <LinearGradient
@@ -362,50 +393,59 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>Quick Actions</Text>
           </View>
           <View style={styles.quickActionsGrid}>
-            <LinearGradient
-              colors={['#667eea', '#764ba2']}
+            <TouchableOpacity
               style={styles.actionCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              onPress={() => navigation.navigate('Clinical Trials')}
+              activeOpacity={0.8}
             >
-              <Surface 
-                style={styles.actionContent}
-                onTouchEnd={() => navigation.navigate('Clinical Trials')}
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                style={styles.actionGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                <Ionicons name="flask-outline" size={28} color="white" style={styles.actionIcon} />
-                <Text style={styles.actionTitle}>Clinical Trials</Text>
-              </Surface>
-            </LinearGradient>
+                <View style={styles.actionContent}>
+                  <Ionicons name="flask-outline" size={28} color="white" style={styles.actionIcon} />
+                  <Text style={styles.actionTitle}>Clinical Trials</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
 
-            <LinearGradient
-              colors={['#4facfe', '#00f2fe']}
+            <TouchableOpacity
               style={styles.actionCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              onPress={() => navigation.navigate('AI Verification')}
+              activeOpacity={0.8}
             >
-              <Surface 
-                style={styles.actionContent}
-                onTouchEnd={() => navigation.navigate('Cold Chain')}
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                style={styles.actionGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                <Ionicons name="thermometer-outline" size={28} color="white" style={styles.actionIcon} />
-                <Text style={styles.actionTitle}>Cold Chain</Text>
-              </Surface>
-            </LinearGradient>
+                <View style={styles.actionContent}>
+                  <Ionicons name="camera-outline" size={28} color="white" style={styles.actionIcon} />
+                  <Text style={styles.actionTitle}>AI Verify</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
 
-            <LinearGradient
-              colors={['#f093fb', '#f5576c']}
+            <TouchableOpacity
               style={styles.actionCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              onPress={() => navigation.navigate('Patient Care')}
+              activeOpacity={0.8}
             >
-              <Surface 
-                style={styles.actionContent}
-                onTouchEnd={() => navigation.navigate('AI Verification')}
+              <LinearGradient
+                colors={['#f093fb', '#f5576c']}
+                style={styles.actionGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                <Ionicons name="camera-outline" size={28} color="white" style={styles.actionIcon} />
-                <Text style={styles.actionTitle}>AI Verify</Text>
-              </Surface>
-            </LinearGradient>
+                <View style={styles.actionContent}>
+                  <Ionicons name="people-outline" size={28} color="white" style={styles.actionIcon} />
+                  <Text style={styles.actionTitle}>Patient Care</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 

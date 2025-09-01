@@ -98,9 +98,22 @@ const ColdChainScreen = () => {
     batches.forEach(batch => {
       for (let i = 23; i >= 0; i--) {
         const timestamp = new Date(now.getTime() - i * 5 * 60 * 1000);
-        const baseTemp = getBatchBaseTemp(batch.id);
-        const variation = (Math.random() - 0.5) * 4; // ±2°C variation
-        const temperature = baseTemp + variation;
+        let temperature, status;
+        
+        // Make BATCH003 always critical to demonstrate AI model effectiveness
+        if (batch.id === 'BATCH003') {
+          // Generate consistently high critical temperatures (outside 2-8°C range)
+          // Stay in high range to avoid wild jumps between hot and cold
+          temperature = 9.0 + Math.random() * 2.5; // High temp: 9.0-11.5°C
+          status = 'CRITICAL';
+        } else {
+          const baseTemp = getBatchBaseTemp(batch.id);
+          const variation = (Math.random() - 0.5) * 4; // ±2°C variation
+          temperature = baseTemp + variation;
+          status = temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
+                   temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE';
+        }
+        
         const humidity = getBatchBaseHumidity(batch.id) + (Math.random() - 0.5) * 20;
         
         mockData.push({
@@ -109,8 +122,7 @@ const ColdChainScreen = () => {
           temperature: parseFloat(temperature.toFixed(1)),
           humidity: parseFloat(humidity.toFixed(1)),
           timestamp: timestamp.toISOString(),
-          status: temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
-                  temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE'
+          status: status
         });
       }
     });
@@ -124,9 +136,22 @@ const ColdChainScreen = () => {
     
     for (let i = 23; i >= 0; i--) {
       const timestamp = new Date(now.getTime() - i * 5 * 60 * 1000);
-      const baseTemp = getBatchBaseTemp(batchId);
-      const variation = (Math.random() - 0.5) * 4; // ±2°C variation
-      const temperature = baseTemp + variation;
+      let temperature, status;
+      
+      // Make BATCH003 always critical to demonstrate AI model effectiveness
+      if (batchId === 'BATCH003') {
+        // Generate consistently high critical temperatures (outside 2-8°C range)
+        // Stay in high range to avoid wild jumps between hot and cold
+        temperature = 9.0 + Math.random() * 2.5; // High temp: 9.0-11.5°C
+        status = 'CRITICAL';
+      } else {
+        const baseTemp = getBatchBaseTemp(batchId);
+        const variation = (Math.random() - 0.5) * 4; // ±2°C variation
+        temperature = baseTemp + variation;
+        status = temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
+                 temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE';
+      }
+      
       const humidity = getBatchBaseHumidity(batchId) + (Math.random() - 0.5) * 20;
       
       mockData.push({
@@ -135,8 +160,7 @@ const ColdChainScreen = () => {
         temperature: parseFloat(temperature.toFixed(1)),
         humidity: parseFloat(humidity.toFixed(1)),
         timestamp: timestamp.toISOString(),
-        status: temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
-                temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE'
+        status: status
       });
     }
     
@@ -167,9 +191,22 @@ const ColdChainScreen = () => {
     
     // Add new data point for each batch
     batches.forEach(batch => {
-      const baseTemp = getBatchBaseTemp(batch.id);
-      const variation = (Math.random() - 0.5) * 4;
-      const temperature = baseTemp + variation;
+      let temperature, status;
+      
+      // Make BATCH003 always critical to demonstrate AI model effectiveness
+      if (batch.id === 'BATCH003') {
+        // Generate consistently high critical temperatures (outside 2-8°C range)
+        // Stay in high range to avoid wild jumps between hot and cold
+        temperature = 9.0 + Math.random() * 2.5; // High temp: 9.0-11.5°C
+        status = 'CRITICAL';
+      } else {
+        const baseTemp = getBatchBaseTemp(batch.id);
+        const variation = (Math.random() - 0.5) * 4;
+        temperature = baseTemp + variation;
+        status = temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
+                 temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE';
+      }
+      
       const humidity = getBatchBaseHumidity(batch.id) + (Math.random() - 0.5) * 20;
       
       newDataPoints.push({
@@ -178,8 +215,7 @@ const ColdChainScreen = () => {
         temperature: parseFloat(temperature.toFixed(1)),
         humidity: parseFloat(humidity.toFixed(1)),
         timestamp: now.toISOString(),
-        status: temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
-                temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE'
+        status: status
       });
     });
     
