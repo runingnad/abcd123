@@ -2,6 +2,16 @@
 
 A comprehensive React Native mobile application for MedChain - a blockchain-powered healthcare inventory management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
 
+## ✅ Recent Updates & Fixes
+
+**Major Mobile App Overhaul (Latest)**
+- ✅ **Fixed Navigation Issues** - Replaced cramped 6-tab navigation with clean 4-tab + drawer structure
+- ✅ **Context Management** - Proper AuthProvider and ThemeProvider with persistent storage
+- ✅ **Error Handling** - Added ErrorBoundary and LoadingScreen components
+- ✅ **Mobile API Config** - Platform-specific URLs for Android emulator support
+- ✅ **Enhanced UI/UX** - Custom drawer with user profile and theme toggle
+- ✅ **Better Flow** - Streamlined navigation reduces user confusion
+
 ## 🌟 Features
 
 ### 🔐 Authentication

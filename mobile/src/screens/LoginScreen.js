@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,7 +16,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -25,7 +25,7 @@ const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { setIsAuthenticated } = useContext(AuthContext);
+  const { login } = useAuth();
   const theme = useTheme();
 
   const handleLogin = async () => {
@@ -37,15 +37,16 @@ const LoginScreen = () => {
     setIsLoading(true);
     setError('');
 
-    // Simulate API call delay
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
-        setIsAuthenticated(true);
-      } else {
-        setError('Invalid credentials. Use admin/admin123');
+    try {
+      const result = await login(username, password);
+      if (!result.success) {
+        setError(result.error || 'Login failed');
       }
+    } catch (error) {
+      setError('An unexpected error occurred');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -137,7 +138,7 @@ const LoginScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.logoContainer}>
           <Ionicons name="medical" style={styles.logo} />
-          <Title style={styles.title}>MedChain</Title>
+          <Title style={styles.title}>MedCare</Title>
           <Paragraph style={styles.subtitle}>
             Healthcare Inventory Management System
           </Paragraph>

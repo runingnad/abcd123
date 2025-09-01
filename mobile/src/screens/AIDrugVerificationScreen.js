@@ -8,11 +8,16 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Animated
 } from 'react-native';
-import { Card, Button, Title, Paragraph, Badge, ProgressBar } from 'react-native-paper';
+import { Card, Button, Title, Paragraph, Badge, ProgressBar, Banner, useTheme as usePaperTheme } from 'react-native-paper';
 import { Camera, Upload, CheckCircle, AlertTriangle, Info, X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
+import { ModernCard } from '../components/ModernCard';
+import { GRADIENTS } from '../utils/themes';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,19 +26,96 @@ const AIDrugVerificationScreen = () => {
   const [verificationResult, setVerificationResult] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [showSimulationBanner, setShowSimulationBanner] = useState(true);
+  const [fadeAnim] = useState(new Animated.Value(0));
   const { isDarkMode } = useTheme();
+  const paperTheme = usePaperTheme();
 
-  const handleImageUpload = () => {
-    // Simulate image upload
-    Alert.alert('Image Upload', 'Image upload functionality would be implemented here');
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handleImageUpload = async () => {
+    try {
+      // Request permission to access media library
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          'Permission Required',
+          'Permission to access camera roll is required to upload images.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setSelectedImage(imageUri);
+        setImagePreview(imageUri);
+        setVerificationResult(null);
+        
+        // Show simulation notice
+        Alert.alert(
+          'Simulation Mode',
+          'This is a demo version. In production, the image would be processed by our AI verification system.',
+          [{ text: 'Got it' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
   };
 
-  const handleCameraCapture = () => {
-    // Simulate camera capture
-    const mockImage = 'https://via.placeholder.com/300x200/4F46E5/FFFFFF?text=Drug+Image';
-    setSelectedImage(mockImage);
-    setImagePreview(mockImage);
-    setVerificationResult(null);
+  const handleCameraCapture = async () => {
+    try {
+      // Request permission to access camera
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          'Permission Required',
+          'Permission to access camera is required to take photos.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setSelectedImage(imageUri);
+        setImagePreview(imageUri);
+        setVerificationResult(null);
+        
+        // Show simulation notice
+        Alert.alert(
+          'Simulation Mode',
+          'This is a demo version. In production, the captured image would be processed by our AI verification system.',
+          [{ text: 'Got it' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to access camera. Please try again.');
+    }
   };
 
   const simulateVerification = async () => {
@@ -94,21 +176,49 @@ const AIDrugVerificationScreen = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6' }]}>
-      <View style={styles.header}>
-        <Title style={[styles.headerTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
-          AI Drug Verification
-        </Title>
-        <Paragraph style={[styles.headerSubtitle, { color: isDarkMode ? '#D1D5DB' : '#6B7280' }]}>
-          Verify medications using advanced computer vision and AI
-        </Paragraph>
-      </View>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+      {/* Modern Header with Gradient */}
+      <LinearGradient
+        colors={GRADIENTS.primary}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <Title style={styles.headerTitle}>
+            AI Drug Verification
+          </Title>
+          <Paragraph style={styles.headerSubtitle}>
+            Verify medications using advanced computer vision and AI
+          </Paragraph>
+        </Animated.View>
+      </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Simulation Notice Banner */}
+        {showSimulationBanner && (
+          <Banner
+            visible={showSimulationBanner}
+            actions={[
+              {
+                label: 'Got it',
+                onPress: () => setShowSimulationBanner(false),
+              },
+            ]}
+            icon={() => <Info size={20} color={paperTheme.colors.primary} />}
+            style={styles.banner}
+          >
+            This is a simulation. Camera and image processing features are for demonstration purposes.
+          </Banner>
+        )}
+
         {/* Image Upload & Camera Section */}
-        <Card style={[styles.card, { backgroundColor: isDarkMode ? '#374151' : '#FFFFFF' }]}>
-          <Card.Content>
-            <Title style={[styles.cardTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+        <ModernCard style={styles.card} shadow="medium">
+          <View style={styles.cardContent}>
+            <Title style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Upload or Capture Image
             </Title>
             
@@ -124,45 +234,66 @@ const AIDrugVerificationScreen = () => {
 
             {/* Upload Buttons */}
             <View style={styles.buttonContainer}>
-              <Button
-                mode="outlined"
-                icon={() => <Upload size={20} color="#3B82F6" />}
-                onPress={handleImageUpload}
-                style={[styles.button, styles.uploadButton]}
-                labelStyle={styles.buttonLabel}
+              <LinearGradient
+                colors={['#3B82F6', '#1D4ED8']}
+                style={styles.gradientButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                Upload Image
-              </Button>
+                <Button
+                  mode="text"
+                  icon={() => <Upload size={20} color="white" />}
+                  onPress={handleImageUpload}
+                  style={styles.button}
+                  labelStyle={[styles.buttonLabel, { color: 'white' }]}
+                >
+                  Upload Image
+                </Button>
+              </LinearGradient>
               
-              <Button
-                mode="outlined"
-                icon={() => <Camera size={20} color="#10B981" />}
-                onPress={handleCameraCapture}
-                style={[styles.button, styles.cameraButton]}
-                labelStyle={styles.buttonLabel}
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                style={styles.gradientButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               >
-                Take Photo
-              </Button>
+                <Button
+                  mode="text"
+                  icon={() => <Camera size={20} color="white" />}
+                  onPress={handleCameraCapture}
+                  style={styles.button}
+                  labelStyle={[styles.buttonLabel, { color: 'white' }]}
+                >
+                  Take Photo
+                </Button>
+              </LinearGradient>
             </View>
 
             {/* Verify Button */}
-            <Button
-              mode="contained"
-              onPress={simulateVerification}
-              loading={isVerifying}
-              disabled={!selectedImage}
-              style={[styles.verifyButton, { backgroundColor: '#8B5CF6' }]}
-              labelStyle={styles.verifyButtonLabel}
+            <LinearGradient
+              colors={selectedImage ? ['#8B5CF6', '#7C3AED'] : ['#9CA3AF', '#6B7280']}
+              style={styles.verifyButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
-              {isVerifying ? 'Verifying...' : 'Verify Drug'}
-            </Button>
-          </Card.Content>
-        </Card>
+              <Button
+                mode="text"
+                onPress={simulateVerification}
+                loading={isVerifying}
+                disabled={!selectedImage}
+                style={styles.verifyButton}
+                labelStyle={[styles.verifyButtonLabel, { color: 'white' }]}
+              >
+                {isVerifying ? 'Verifying...' : 'Verify Drug'}
+              </Button>
+            </LinearGradient>
+          </View>
+        </ModernCard>
 
         {/* Verification Results */}
-        <Card style={[styles.card, { backgroundColor: isDarkMode ? '#374151' : '#FFFFFF' }]}>
-          <Card.Content>
-            <Title style={[styles.cardTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+        <ModernCard style={styles.card} shadow="medium">
+          <View style={styles.cardContent}>
+            <Title style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Verification Results
             </Title>
 
@@ -170,23 +301,25 @@ const AIDrugVerificationScreen = () => {
               <View style={styles.resultsContainer}>
                 {/* Verification Status */}
                 <View style={styles.statusRow}>
-                  <Text style={[styles.statusLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                  <Text style={[styles.statusLabel, { color: paperTheme.colors.onSurface }]}>
                     Status:
                   </Text>
-                  <Badge
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: verificationResult.verified ? '#10B981' : '#EF4444' }
-                    ]}
+                  <LinearGradient
+                    colors={verificationResult.verified ? ['#10B981', '#059669'] : ['#EF4444', '#DC2626']}
+                    style={styles.statusBadgeGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
-                    {verificationResult.verified ? 'VERIFIED' : 'NOT VERIFIED'}
-                  </Badge>
+                    <Text style={styles.statusBadgeText}>
+                      {verificationResult.verified ? 'VERIFIED' : 'NOT VERIFIED'}
+                    </Text>
+                  </LinearGradient>
                 </View>
 
                 {/* Confidence Score */}
                 <View style={styles.confidenceContainer}>
                   <View style={styles.confidenceHeader}>
-                    <Text style={[styles.confidenceLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.confidenceLabel, { color: paperTheme.colors.onSurface }]}>
                       Confidence:
                     </Text>
                     <Text style={[styles.confidenceValue, { color: getConfidenceColor(verificationResult.confidence_score) }]}>
@@ -203,18 +336,18 @@ const AIDrugVerificationScreen = () => {
                 {/* Drug Details */}
                 <View style={styles.detailsContainer}>
                   <View style={styles.detailRow}>
-                    <Text style={[styles.detailLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.detailLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                       Drug Name:
                     </Text>
-                    <Text style={[styles.detailValue, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                    <Text style={[styles.detailValue, { color: paperTheme.colors.onSurface }]}>
                       {verificationResult.detected_drug_name}
                     </Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={[styles.detailLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.detailLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                       Dosage:
                     </Text>
-                    <Text style={[styles.detailValue, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                    <Text style={[styles.detailValue, { color: paperTheme.colors.onSurface }]}>
                       {verificationResult.detected_dosage}
                     </Text>
                   </View>
@@ -222,44 +355,44 @@ const AIDrugVerificationScreen = () => {
 
                 {/* Quality Metrics */}
                 <View style={styles.qualityContainer}>
-                  <Text style={[styles.qualityTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                  <Text style={[styles.qualityTitle, { color: paperTheme.colors.onSurface }]}>
                     Quality Assessment:
                   </Text>
                   <View style={styles.qualityRow}>
-                    <Text style={[styles.qualityLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.qualityLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                       Label Quality:
                     </Text>
-                    <Badge style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.label_quality) }]}>
-                      {verificationResult.label_quality}
-                    </Badge>
+                    <View style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.label_quality) }]}>
+                      <Text style={styles.qualityBadgeText}>{verificationResult.label_quality}</Text>
+                    </View>
                   </View>
                   <View style={styles.qualityRow}>
-                    <Text style={[styles.qualityLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.qualityLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                       Color Match:
                     </Text>
-                    <Badge style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.color_match) }]}>
-                      {verificationResult.color_match}
-                    </Badge>
+                    <View style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.color_match) }]}>
+                      <Text style={styles.qualityBadgeText}>{verificationResult.color_match}</Text>
+                    </View>
                   </View>
                   <View style={styles.qualityRow}>
-                    <Text style={[styles.qualityLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                    <Text style={[styles.qualityLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                       Shape Match:
                     </Text>
-                    <Badge style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.shape_match) }]}>
-                      {verificationResult.shape_match}
-                    </Badge>
+                    <View style={[styles.qualityBadge, { backgroundColor: getQualityColor(verificationResult.shape_match) }]}>
+                      <Text style={styles.qualityBadgeText}>{verificationResult.shape_match}</Text>
+                    </View>
                   </View>
                 </View>
 
                 {/* Recommendations */}
                 <View style={styles.recommendationsContainer}>
-                  <Text style={[styles.recommendationsTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                  <Text style={[styles.recommendationsTitle, { color: paperTheme.colors.onSurface }]}>
                     Recommendations:
                   </Text>
                   {verificationResult.recommendations.map((rec, index) => (
                     <View key={index} style={styles.recommendationItem}>
                       <CheckCircle size={16} color="#10B981" />
-                      <Text style={[styles.recommendationText, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+                      <Text style={[styles.recommendationText, { color: paperTheme.colors.onSurfaceVariant }]}>
                         {rec}
                       </Text>
                     </View>
@@ -268,16 +401,16 @@ const AIDrugVerificationScreen = () => {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Info size={48} color={isDarkMode ? '#6B7280' : '#9CA3AF'} />
-                <Text style={[styles.emptyStateText, { color: isDarkMode ? '#9CA3AF' : '#6B7280' }]}>
+                <Info size={48} color={paperTheme.colors.onSurfaceVariant} />
+                <Text style={[styles.emptyStateText, { color: paperTheme.colors.onSurfaceVariant }]}>
                   Upload or capture an image to verify
                 </Text>
               </View>
             )}
-          </Card.Content>
-        </Card>
-      </View>
-    </ScrollView>
+          </View>
+        </ModernCard>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -285,29 +418,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 20,
-    alignItems: 'center',
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
   },
   headerTitle: {
+    color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 8,
+    textAlign: 'center',
   },
   headerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 16,
+    fontWeight: '400',
     textAlign: 'center',
   },
   content: {
-    padding: 16,
+    flex: 1,
+    paddingHorizontal: 16,
+    marginTop: -20,
+  },
+  banner: {
+    marginBottom: 16,
+    borderRadius: 12,
   },
   card: {
     marginBottom: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 16,
+  },
+  cardContent: {
+    padding: 20,
   },
   cardTitle: {
     fontSize: 20,
@@ -337,28 +480,50 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
+    gap: 12,
+  },
+  gradientButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   button: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  uploadButton: {
-    borderColor: '#3B82F6',
-  },
-  cameraButton: {
-    borderColor: '#10B981',
+    margin: 0,
+    borderRadius: 0,
   },
   buttonLabel: {
     fontSize: 14,
     fontWeight: '600',
+    paddingVertical: 8,
+  },
+  verifyButtonGradient: {
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   verifyButton: {
-    width: '100%',
-    paddingVertical: 8,
+    margin: 0,
+    borderRadius: 0,
+    paddingVertical: 12,
   },
   verifyButtonLabel: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  statusBadgeGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  qualityBadgeText: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: '600',
   },
   resultsContainer: {

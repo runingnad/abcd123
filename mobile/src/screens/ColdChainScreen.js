@@ -35,6 +35,13 @@ const ColdChainScreen = () => {
   useEffect(() => {
     loadColdChainData();
     startPulseAnimation();
+    
+    // Set up live updates every 3 seconds
+    const interval = setInterval(() => {
+      updateLiveData();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -42,6 +49,14 @@ const ColdChainScreen = () => {
       detectAnomalies();
     }
   }, [coldChainData]);
+
+  useEffect(() => {
+    // When batch changes, ensure we have data for the selected batch
+    const batchData = getBatchData(selectedBatch);
+    if (batchData.length === 0) {
+      generateMockDataForBatch(selectedBatch);
+    }
+  }, [selectedBatch]);
 
   const startPulseAnimation = () => {
     Animated.loop(
@@ -67,28 +82,56 @@ const ColdChainScreen = () => {
         setColdChainData(data);
       } else {
         // Use mock data if API fails
-        generateMockData();
+        generateMockDataForAllBatches();
       }
     } catch (error) {
       console.error('Error loading cold chain data:', error);
-      generateMockData();
+      generateMockDataForAllBatches();
     }
   };
 
-  const generateMockData = () => {
+  const generateMockDataForAllBatches = () => {
+    const mockData = [];
+    const now = new Date();
+    
+    // Generate data for all batches
+    batches.forEach(batch => {
+      for (let i = 23; i >= 0; i--) {
+        const timestamp = new Date(now.getTime() - i * 5 * 60 * 1000);
+        const baseTemp = getBatchBaseTemp(batch.id);
+        const variation = (Math.random() - 0.5) * 4; // ±2°C variation
+        const temperature = baseTemp + variation;
+        const humidity = getBatchBaseHumidity(batch.id) + (Math.random() - 0.5) * 20;
+        
+        mockData.push({
+          id: `${batch.id}_${Date.now()}_${i}`,
+          batchID: batch.id,
+          temperature: parseFloat(temperature.toFixed(1)),
+          humidity: parseFloat(humidity.toFixed(1)),
+          timestamp: timestamp.toISOString(),
+          status: temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
+                  temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE'
+        });
+      }
+    });
+    
+    setColdChainData(mockData);
+  };
+
+  const generateMockDataForBatch = (batchId) => {
     const mockData = [];
     const now = new Date();
     
     for (let i = 23; i >= 0; i--) {
       const timestamp = new Date(now.getTime() - i * 5 * 60 * 1000);
-      const baseTemp = 5.0;
+      const baseTemp = getBatchBaseTemp(batchId);
       const variation = (Math.random() - 0.5) * 4; // ±2°C variation
       const temperature = baseTemp + variation;
-      const humidity = 45 + (Math.random() - 0.5) * 20; // 35-55% humidity
+      const humidity = getBatchBaseHumidity(batchId) + (Math.random() - 0.5) * 20;
       
       mockData.push({
-        id: Date.now() + i,
-        batchID: selectedBatch,
+        id: `${batchId}_${Date.now()}_${i}`,
+        batchID: batchId,
         temperature: parseFloat(temperature.toFixed(1)),
         humidity: parseFloat(humidity.toFixed(1)),
         timestamp: timestamp.toISOString(),
@@ -97,7 +140,71 @@ const ColdChainScreen = () => {
       });
     }
     
-    setColdChainData(mockData);
+    setColdChainData(prev => [...prev, ...mockData]);
+  };
+
+  const getBatchBaseTemp = (batchId) => {
+    switch (batchId) {
+      case 'BATCH001': return 5.0; // COVID-19 Vaccine
+      case 'BATCH002': return 4.5; // Cancer Treatment
+      case 'BATCH003': return 5.5; // Diabetes Medication
+      default: return 5.0;
+    }
+  };
+
+  const getBatchBaseHumidity = (batchId) => {
+    switch (batchId) {
+      case 'BATCH001': return 45; // COVID-19 Vaccine
+      case 'BATCH002': return 50; // Cancer Treatment
+      case 'BATCH003': return 40; // Diabetes Medication
+      default: return 45;
+    }
+  };
+
+  const updateLiveData = () => {
+    const now = new Date();
+    const newDataPoints = [];
+    
+    // Add new data point for each batch
+    batches.forEach(batch => {
+      const baseTemp = getBatchBaseTemp(batch.id);
+      const variation = (Math.random() - 0.5) * 4;
+      const temperature = baseTemp + variation;
+      const humidity = getBatchBaseHumidity(batch.id) + (Math.random() - 0.5) * 20;
+      
+      newDataPoints.push({
+        id: `${batch.id}_${Date.now()}_live`,
+        batchID: batch.id,
+        temperature: parseFloat(temperature.toFixed(1)),
+        humidity: parseFloat(humidity.toFixed(1)),
+        timestamp: now.toISOString(),
+        status: temperature >= 8.0 || temperature <= 2.0 ? 'CRITICAL' : 
+                temperature >= 6.0 || temperature <= 3.0 ? 'WARNING' : 'SAFE'
+      });
+    });
+    
+    setColdChainData(prev => {
+      // Keep only last 24 data points per batch and add new ones
+      const updatedData = [...prev, ...newDataPoints];
+      const groupedByBatch = {};
+      
+      updatedData.forEach(item => {
+        if (!groupedByBatch[item.batchID]) {
+          groupedByBatch[item.batchID] = [];
+        }
+        groupedByBatch[item.batchID].push(item);
+      });
+      
+      // Keep only last 24 items per batch
+      Object.keys(groupedByBatch).forEach(batchId => {
+        groupedByBatch[batchId] = groupedByBatch[batchId]
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          .slice(-24);
+      });
+      
+      // Flatten back to single array
+      return Object.values(groupedByBatch).flat();
+    });
   };
 
   const detectAnomalies = async () => {
@@ -146,20 +253,23 @@ const ColdChainScreen = () => {
   };
 
   const getCurrentStatus = () => {
-    if (coldChainData.length === 0) return 'UNKNOWN';
-    const latest = coldChainData[coldChainData.length - 1];
+    const batchData = getBatchData(selectedBatch);
+    if (batchData.length === 0) return 'UNKNOWN';
+    const latest = batchData[batchData.length - 1];
     return latest.status;
   };
 
   const getCurrentTemperature = () => {
-    if (coldChainData.length === 0) return 'N/A';
-    const latest = coldChainData[coldChainData.length - 1];
+    const batchData = getBatchData(selectedBatch);
+    if (batchData.length === 0) return 'N/A';
+    const latest = batchData[batchData.length - 1];
     return `${latest.temperature}°C`;
   };
 
   const getCurrentHumidity = () => {
-    if (coldChainData.length === 0) return 'N/A';
-    const latest = coldChainData[coldChainData.length - 1];
+    const batchData = getBatchData(selectedBatch);
+    if (batchData.length === 0) return 'N/A';
+    const latest = batchData[batchData.length - 1];
     return `${latest.humidity}%`;
   };
 
@@ -189,16 +299,24 @@ const ColdChainScreen = () => {
   const currentBatchData = getBatchData(selectedBatch);
 
   const chartData = {
-    labels: currentBatchData.slice(-8).map(d => new Date(d.timestamp).toLocaleTimeString().slice(0, 5)),
+    labels: currentBatchData.length > 0 ? 
+      currentBatchData.slice(-8).map(d => new Date(d.timestamp).toLocaleTimeString().slice(0, 5)) :
+      ['--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--'],
     datasets: [{
-      data: currentBatchData.slice(-8).map(d => d.temperature)
+      data: currentBatchData.length > 0 ? 
+        currentBatchData.slice(-8).map(d => d.temperature) :
+        [0, 0, 0, 0, 0, 0, 0, 0]
     }]
   };
 
   const humidityChartData = {
-    labels: currentBatchData.slice(-8).map(d => new Date(d.timestamp).toLocaleTimeString().slice(0, 5)),
+    labels: currentBatchData.length > 0 ? 
+      currentBatchData.slice(-8).map(d => new Date(d.timestamp).toLocaleTimeString().slice(0, 5)) :
+      ['--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--', '--:--'],
     datasets: [{
-      data: currentBatchData.slice(-8).map(d => d.humidity)
+      data: currentBatchData.length > 0 ? 
+        currentBatchData.slice(-8).map(d => d.humidity) :
+        [0, 0, 0, 0, 0, 0, 0, 0]
     }]
   };
 
