@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the MedChain Mobile app will be documented in this file.
+All notable changes to the MedCare Mobile app will be documented in this file.
 
 ## [1.0.0] - 2025-09-01
 

@@ -57,6 +57,7 @@ const ColdChainMonitoring = () => {
   useEffect(() => {
     if (selectedBatch) {
       fetchBatchData(selectedBatch);
+      // Don't clear alerts when switching - keep all batch alerts visible
     }
   }, [selectedBatch]);
 
@@ -84,10 +85,9 @@ const ColdChainMonitoring = () => {
             // Update current stats if it's the selected batch
             if (newData.batchID === selectedBatch) {
               updateCurrentStats(newData);
+              fetchRiskAnalysis(newData.batchID);
+              detectAnomalies(newData);
             }
-            
-            fetchRiskAnalysis(newData.batchID);
-            detectAnomalies(newData);
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -120,6 +120,9 @@ const ColdChainMonitoring = () => {
         if (data.data && data.data.length > 0) {
           const latest = data.data[data.data.length - 1];
           updateCurrentStats(latest);
+          fetchRiskAnalysis(selectedBatch);
+          // Force anomaly detection for initial data
+          detectAnomalies(latest);
         }
       }
     } catch (error) {
@@ -141,6 +144,9 @@ const ColdChainMonitoring = () => {
         if (batchData.length > 0) {
           const latest = batchData[batchData.length - 1];
           updateCurrentStats(latest);
+          fetchRiskAnalysis(batchId);
+          // Force anomaly detection for batch data
+          detectAnomalies(latest);
         }
       }
     } catch (error) {
@@ -168,6 +174,8 @@ const ColdChainMonitoring = () => {
   const getStatusFromTemp = (temp) => {
     if (temp >= 2 && temp <= 8) return 'SAFE';
     if (temp > 8 && temp <= 10) return 'WARNING';
+    if (temp > 10) return 'CRITICAL';
+    if (temp < 2) return 'CRITICAL';
     return 'CRITICAL';
   };
 
@@ -182,113 +190,60 @@ const ColdChainMonitoring = () => {
   };
 
   const detectAnomalies = (data) => {
-    // Skip if alerts are disabled
-    if (alertsDisabled) {
-      // Still add to anomaly list but don't show toast
-      const temp = data.temperature;
-      const humidity = data.humidity;
-      
-      if (data.batchID === 'BATCH003' || temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
-        let severity = 'WARNING';
-        let message = '';
-        
-        if (data.batchID === 'BATCH003') {
-          severity = 'CRITICAL';
-          message = `BATCH003 CRITICAL: Temperature ${temp}°C and Humidity ${humidity}% - Immediate action required!`;
-        } else if (temp < 0 || temp > 10 || humidity < 20 || humidity > 80) {
-          severity = 'CRITICAL';
-          message = temp < 0 || temp > 10 
-            ? `CRITICAL: Temperature ${temp}°C is dangerously outside safe range (2-8°C)`
-            : `CRITICAL: Humidity ${humidity}% is dangerously outside optimal range (30-70%)`;
-        } else {
-          message = temp < 2 || temp > 8 
-            ? `WARNING: Temperature ${temp}°C is outside safe range (2-8°C)`
-            : `WARNING: Humidity ${humidity}% is outside optimal range (30-70%)`;
-        }
-        
-        const anomaly = {
-          id: Date.now(),
-          batchID: data.batchID,
-          type: temp < 2 || temp > 8 ? 'Temperature' : 'Humidity',
-          value: temp < 2 || temp > 8 ? `${temp}°C` : `${humidity}%`,
-          severity: severity,
-          timestamp: data.timestamp,
-          message: message
-        };
-        
-        setAnomalyAlerts(prev => [anomaly, ...prev.slice(0, 9)]);
-      }
-      return; // Don't show any toasts
-    }
-    
     const temp = data.temperature;
     const humidity = data.humidity;
     const now = Date.now();
     
-    // Rate limiting: only show alerts every 30 seconds per batch
-    const batchKey = data.batchID;
-    if (lastAlertTime[batchKey] && (now - lastAlertTime[batchKey]) < 30000) {
-      return; // Skip if last alert was less than 30 seconds ago
-    }
-    
-    // Always detect anomalies for BATCH003 (demo batch)
-    if (data.batchID === 'BATCH003' || temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
-      let severity = 'WARNING';
-      let message = '';
-      
-      if (data.batchID === 'BATCH003') {
-        severity = 'CRITICAL';
-        message = `BATCH003 CRITICAL: Temperature ${temp}°C and Humidity ${humidity}% - Immediate action required!`;
-      } else if (temp < 0 || temp > 10 || humidity < 20 || humidity > 80) {
-        severity = 'CRITICAL';
-        message = temp < 0 || temp > 10 
-          ? `CRITICAL: Temperature ${temp}°C is dangerously outside safe range (2-8°C)`
-          : `CRITICAL: Humidity ${humidity}% is dangerously outside optimal range (30-70%)`;
-      } else {
-        message = temp < 2 || temp > 8 
-          ? `WARNING: Temperature ${temp}°C is outside safe range (2-8°C)`
-          : `WARNING: Humidity ${humidity}% is outside optimal range (30-70%)`;
-      }
-      
+    // Always add anomalies to the list (don't filter by selected batch)
+    if (temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
+      let severity = temp > 10 || temp < 0 || humidity > 80 || humidity < 20 ? 'CRITICAL' : 'WARNING';
       const anomaly = {
-        id: Date.now(),
+        id: Date.now() + Math.random(), // Ensure unique IDs
         batchID: data.batchID,
         type: temp < 2 || temp > 8 ? 'Temperature' : 'Humidity',
         value: temp < 2 || temp > 8 ? `${temp}°C` : `${humidity}%`,
         severity: severity,
         timestamp: data.timestamp,
-        message: message
+        message: `${severity}: ${data.batchID} - ${temp < 2 || temp > 8 ? `Temperature ${temp}°C` : `Humidity ${humidity}%`} out of range`
       };
+      setAnomalyAlerts(prev => [anomaly, ...prev.slice(0, 19)]); // Keep more alerts
+    }
+    
+    // Only show toasts for selected batch
+    if (data.batchID !== selectedBatch) {
+      return;
+    }
+    
+    // Rate limiting: only show alerts every 10 seconds globally
+    const globalKey = 'global_alert';
+    if (lastAlertTime[globalKey] && (now - lastAlertTime[globalKey]) < 10000) {
+      return;
+    }
+    
+    // Skip if alerts are disabled
+    if (alertsDisabled) return;
+    
+    // Show toast for selected batch anomalies
+    if (temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
+      let severity = temp > 10 || temp < 0 || humidity > 80 || humidity < 20 ? 'CRITICAL' : 'WARNING';
       
-      setAnomalyAlerts(prev => [anomaly, ...prev.slice(0, 9)]); // Keep last 10
+      // Update global alert time
+      setLastAlertTime(prev => ({...prev, [globalKey]: now}));
       
-      // Update last alert time for this batch
-      setLastAlertTime(prev => ({...prev, [batchKey]: now}));
-      
-      // Limit to max 2 active toasts
-      if (activeToasts.length < 2) {
-        const toastId = toast({
-          title: `${data.batchID}`,
-          description: `${temp}°C ${severity === 'CRITICAL' ? '🚨' : '⚠️'}`,
-          status: severity === 'CRITICAL' ? "error" : "warning",
-          duration: 2500,
-          isClosable: true,
-          position: "bottom-right",
-          variant: "left-accent",
-          containerStyle: {
-            maxWidth: '280px',
-            fontSize: '14px'
-          },
-          onCloseComplete: () => {
-            setActiveToasts(prev => prev.filter(id => id !== toastId));
-            // If user manually closes, disable alerts permanently
-            setAlertsDisabled(true);
-            console.log('User dismissed alert - disabling all future alerts');
-          }
-        });
-        
-        setActiveToasts(prev => [...prev, toastId]);
-      }
+      // Show single toast
+      const toastId = toast({
+        title: `${data.batchID} Alert`,
+        description: `${temp}°C ${severity === 'CRITICAL' ? '🚨' : '⚠️'}`,
+        status: severity === 'CRITICAL' ? "error" : "warning",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom-right",
+        variant: "left-accent",
+        containerStyle: {
+          maxWidth: '280px',
+          fontSize: '14px'
+        }
+      });
     }
   };
 
@@ -549,6 +504,52 @@ const ColdChainMonitoring = () => {
           )}
         </CardBody>
       </Card>
+
+      {/* AI Analysis & Recommendations */}
+      {currentRisk && (
+        <Card bg="white" shadow="lg" mb={6}>
+          <CardHeader>
+            <HStack spacing={4}>
+              <Box fontSize="2xl">🤖</Box>
+              <Heading size="lg" color="gray.800">AI Analysis & Recommendations</Heading>
+              <Badge colorScheme={currentRisk.risk_level === 'LOW' ? 'green' : currentRisk.risk_level === 'MEDIUM' ? 'yellow' : 'red'}>
+                {currentRisk.risk_level} RISK
+              </Badge>
+            </HStack>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              {/* Analysis */}
+              <Box p={4} bg="blue.50" borderRadius="lg" border="1px solid" borderColor="blue.200">
+                <Text fontSize="sm" fontWeight="bold" color="blue.800" mb={2}>📊 AI Analysis:</Text>
+                <Text fontSize="sm" color="blue.700">{currentRisk.analysis}</Text>
+              </Box>
+              
+              {/* Recommendations */}
+              <Box p={4} bg="green.50" borderRadius="lg" border="1px solid" borderColor="green.200">
+                <Text fontSize="sm" fontWeight="bold" color="green.800" mb={2}>💡 Recommendations:</Text>
+                <VStack align="start" spacing={1}>
+                  {currentRisk.recommendations?.map((rec, index) => (
+                    <Text key={index} fontSize="sm" color="green.700">• {rec}</Text>
+                  ))}
+                </VStack>
+              </Box>
+              
+              {/* AI Insights */}
+              {currentRisk.ai_insights && (
+                <Box p={4} bg="purple.50" borderRadius="lg" border="1px solid" borderColor="purple.200">
+                  <Text fontSize="sm" fontWeight="bold" color="purple.800" mb={2}>🧠 AI Insights:</Text>
+                  <VStack align="start" spacing={1}>
+                    {currentRisk.ai_insights.map((insight, index) => (
+                      <Text key={index} fontSize="sm" color="purple.700">• {insight}</Text>
+                    ))}
+                  </VStack>
+                </Box>
+              )}
+            </VStack>
+          </CardBody>
+        </Card>
+      )}
 
       {/* AI Anomaly Detection */}
       <Card bg="white" shadow="lg">

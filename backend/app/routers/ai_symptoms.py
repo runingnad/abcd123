@@ -6,7 +6,7 @@ import os
 router = APIRouter(prefix="/ai/symptoms", tags=["ai-symptoms"])
 
 # Load model on startup
-MODEL_PATH = "backend/ai/symptom_model.joblib"
+MODEL_PATH = "ai/symptom_model.joblib"
 if os.path.exists(MODEL_PATH):
     MODEL = joblib.load(MODEL_PATH)
 else:

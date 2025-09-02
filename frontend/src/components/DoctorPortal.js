@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 const DoctorPortal = () => {
   const { token } = useAuth();
-  const [activeTab, setActiveTab] = useState('adherence');
+  const [activeTab, setActiveTab] = useState('dashboard');
   
   // Adherence State
   const [patientId, setPatientId] = useState('');
@@ -102,40 +103,206 @@ const DoctorPortal = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Doctor Portal</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-96 h-96 rounded-full blur-xl bg-gradient-to-r from-blue-400/40 to-purple-400/40" 
+             style={{top: '10%', left: '10%'}} />
+        <div className="absolute w-80 h-80 rounded-full blur-xl bg-gradient-to-r from-purple-400/40 to-pink-400/40" 
+             style={{top: '60%', right: '15%'}} />
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 bg-white/20 backdrop-blur-md border-b border-gray-200/50 px-6 py-4">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Doctor Portal
+        </h1>
+        <p className="text-gray-700 mt-1">Patient Care & Monitoring Dashboard</p>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 p-6">
       
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+      <div className="bg-white/30 backdrop-blur-sm border border-gray-200/50 rounded-xl p-2 mb-6">
+        <nav className="flex space-x-2">
           <button
-            onClick={() => setActiveTab('adherence')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'adherence'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+            onClick={() => setActiveTab('dashboard')}
+            className={`py-3 px-6 rounded-lg font-medium text-sm transition-all ${
+              activeTab === 'dashboard'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-white/50'
             }`}
           >
-            Patient Adherence
+            📊 Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('adherence')}
+            className={`py-3 px-6 rounded-lg font-medium text-sm transition-all ${
+              activeTab === 'adherence'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-white/50'
+            }`}
+          >
+            💊 Patient Adherence
           </button>
           <button
             onClick={() => setActiveTab('chat')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-3 px-6 rounded-lg font-medium text-sm transition-all ${
               activeTab === 'chat'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-white/50'
             }`}
           >
-            Patient Chat
+            💬 Patient Chat
           </button>
         </nav>
       </div>
 
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Patients</p>
+                  <p className="text-3xl font-bold text-gray-900">127</p>
+                  <p className="text-sm text-green-600">↗ +8% this month</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">
+                  👥
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Avg Adherence</p>
+                  <p className="text-3xl font-bold text-gray-900">84.2%</p>
+                  <p className="text-sm text-green-600">↗ +2.1% this week</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">
+                  ✅
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Critical Alerts</p>
+                  <p className="text-3xl font-bold text-gray-900">3</p>
+                  <p className="text-sm text-red-600">↗ +1 today</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-2xl">
+                  🚨
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Consultations</p>
+                  <p className="text-3xl font-bold text-gray-900">42</p>
+                  <p className="text-sm text-blue-600">↗ +5 today</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">
+                  💬
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">📈 Patient Adherence Trends</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={[
+                    { month: 'Jan', adherence: 78 },
+                    { month: 'Feb', adherence: 82 },
+                    { month: 'Mar', adherence: 79 },
+                    { month: 'Apr', adherence: 85 },
+                    { month: 'May', adherence: 88 },
+                    { month: 'Jun', adherence: 84 }
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="adherence" stroke="#3b82f6" strokeWidth={3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">🏥 Department Distribution</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Cardiology', value: 35, color: '#3b82f6' },
+                        { name: 'Diabetes', value: 28, color: '#10b981' },
+                        { name: 'Oncology', value: 22, color: '#f59e0b' },
+                        { name: 'Neurology', value: 15, color: '#ef4444' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                      label={({name, value}) => `${name}: ${value}%`}
+                    >
+                      {[
+                        { name: 'Cardiology', value: 35, color: '#3b82f6' },
+                        { name: 'Diabetes', value: 28, color: '#10b981' },
+                        { name: 'Oncology', value: 22, color: '#f59e0b' },
+                        { name: 'Neurology', value: 15, color: '#ef4444' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">🔔 Recent Activity</h3>
+            <div className="space-y-3">
+              {[
+                { type: 'alert', message: 'Patient P003 missed medication dose', time: '5 mins ago', priority: 'high' },
+                { type: 'success', message: 'Patient P001 completed weekly check-in', time: '15 mins ago', priority: 'low' },
+                { type: 'info', message: 'New lab results available for P002', time: '1 hour ago', priority: 'medium' },
+                { type: 'alert', message: 'Patient P005 reported side effects', time: '2 hours ago', priority: 'high' }
+              ].map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-white/50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-3 h-3 rounded-full ${
+                      activity.priority === 'high' ? 'bg-red-500' :
+                      activity.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}></span>
+                    <p className="text-gray-900">{activity.message}</p>
+                  </div>
+                  <p className="text-sm text-gray-500">{activity.time}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Patient Adherence Tab */}
       {activeTab === 'adherence' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Patient Adherence Monitoring</h2>
+          <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+            <h2 className="text-xl font-semibold mb-4">🏥 Patient Adherence Monitoring</h2>
             
             <div className="flex gap-4 mb-4">
               <input
@@ -294,6 +461,7 @@ const DoctorPortal = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

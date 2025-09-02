@@ -100,7 +100,7 @@ export function CustomDrawerContent(props) {
             <View style={styles.row}>
               <View style={styles.section}>
                 <Paragraph style={[styles.paragraph, styles.caption]}>
-                  MedChain v1.0
+                  MedCare v1.0
                 </Paragraph>
               </View>
             </View>

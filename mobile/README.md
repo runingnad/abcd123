@@ -1,6 +1,6 @@
-# 🏥 MedChain Mobile - Healthcare Inventory Management App
+# 🏥 MedCare Mobile - Healthcare Inventory Management App
 
-A comprehensive React Native mobile application for MedChain - a blockchain-powered healthcare inventory management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
+A comprehensive React Native mobile application for MedCare - a blockchain-powered healthcare inventory management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
 
 ## ✅ Recent Updates & Fixes
 
@@ -116,7 +116,7 @@ src/
 
 ## 🔌 Backend Integration
 
-The mobile app connects to the existing MedChain backend APIs:
+The mobile app connects to the existing MedCare backend APIs:
 
 - **Clinical Trials API** - `/trials` endpoints
 - **Cold Chain API** - `/coldchain` endpoints with ML predictions
@@ -256,10 +256,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🆘 Support
 
-- **Documentation**: [MedChain Docs](https://docs.medchain.com)
+- **Documentation**: [MedCare Docs](https://docs.medchain.com)
 - **Issues**: [GitHub Issues](https://github.com/medchain/mobile/issues)
 - **Email**: support@medchain.com
-- **Discord**: [MedChain Community](https://discord.gg/medchain)
+- **Discord**: [MedCare Community](https://discord.gg/medchain)
 
 ## 🙏 Acknowledgments
 
@@ -270,4 +270,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**MedChain Mobile** - Revolutionizing healthcare inventory management, one batch at a time. 🏥⚡
+**MedCare Mobile** - Revolutionizing healthcare inventory management, one batch at a time. 🏥⚡

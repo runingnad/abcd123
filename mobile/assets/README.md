@@ -1,6 +1,6 @@
 # Assets Directory
 
-This directory contains all the static assets for the MedChain Mobile app.
+This directory contains all the static assets for the MedCare Mobile app.
 
 ## Required Files
 
@@ -20,7 +20,7 @@ This directory contains all the static assets for the MedChain Mobile app.
 ### App Icon (icon.png)
 - **Size**: 1024x1024 pixels
 - **Format**: PNG with transparency
-- **Design**: MedChain logo with healthcare theme
+- **Design**: MedCare logo with healthcare theme
 - **Colors**: Primary blue (#2563eb) with white elements
 
 ### Adaptive Icon (adaptive-icon.png)
@@ -33,14 +33,14 @@ This directory contains all the static assets for the MedChain Mobile app.
 - **Size**: 1242x2436 pixels (iPhone X dimensions)
 - **Format**: PNG
 - **Background**: Primary blue (#2563eb)
-- **Content**: MedChain logo and app name
-- **Text**: "MedChain" in white, centered
+- **Content**: MedCare logo and app name
+- **Text**: "MedCare" in white, centered
 
 ## Design Guidelines
 
 1. **Consistency**: Use the same color scheme across all assets
 2. **Simplicity**: Keep designs clean and recognizable at small sizes
-3. **Branding**: Maintain MedChain's healthcare and technology identity
+3. **Branding**: Maintain MedCare's healthcare and technology identity
 4. **Accessibility**: Ensure good contrast and readability
 
 ## Placeholder Icons

@@ -4,7 +4,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader
 
-data_dir = "backend/ai/skin_nail"
+data_dir = "ai/skin_nail"
 batch = 16
 epochs = 5
 lr = 1e-3
@@ -78,13 +78,13 @@ try:
         
         print(f"Epoch {epoch+1}: train_loss={loss_sum/len(train_dl):.4f} val_acc={correct/total:.3f}")
 
-    torch.save({"state_dict": model.state_dict(), "classes": classes}, "backend/ai/skin_model.pt")
-    print("Saved -> backend/ai/skin_model.pt")
+    torch.save({"state_dict": model.state_dict(), "classes": classes}, "ai/skin_model.pt")
+    print("Saved -> ai/skin_model.pt")
 
 except Exception as e:
     print(f"Training failed: {e}")
     # Create demo model anyway
     model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
     model.classifier[1] = nn.Linear(model.classifier[1].in_features, 3)
-    torch.save({"state_dict": model.state_dict(), "classes": ["healthy", "fungal", "psoriasis"]}, "backend/ai/skin_model.pt")
-    print("Created demo model -> backend/ai/skin_model.pt")
+    torch.save({"state_dict": model.state_dict(), "classes": ["healthy", "fungal", "psoriasis"]}, "ai/skin_model.pt")
+    print("Created demo model -> ai/skin_model.pt")

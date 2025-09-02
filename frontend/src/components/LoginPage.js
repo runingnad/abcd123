@@ -82,7 +82,7 @@ const LoginPage = ({ onLogin, onBack }) => {
               <Lock className="w-8 h-8 text-white" />
             </motion.div>
             <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-white/70">Sign in to your MedChain account</p>
+            <p className="text-white/70">Sign in to your MedCare account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

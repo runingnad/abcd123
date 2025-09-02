@@ -22,7 +22,7 @@ npm start
 ## 📱 App Features
 
 ### ✅ Fixed Issues (Latest Update)
-- **App Name**: Changed from MedChain to MedCare
+- **App Name**: Changed from MedCare to MedCare
 - **Navigation**: Fixed cramped 6-tab layout → Clean 4-tab + drawer
 - **Cold Chain**: Fixed live updates for all batches (BATCH001, BATCH002, BATCH003)
 - **Data Issues**: Resolved NaN values in batch 2 & 3

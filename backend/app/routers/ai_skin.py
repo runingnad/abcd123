@@ -8,7 +8,7 @@ import io
 router = APIRouter(prefix="/ai/skin", tags=["ai-skin"])
 
 # Load model on startup
-MODEL_PATH = "backend/ai/skin_model.pt"
+MODEL_PATH = "ai/skin_model.pt"
 try:
     CHK = torch.load(MODEL_PATH, map_location="cpu")
     CLASSES = CHK["classes"]

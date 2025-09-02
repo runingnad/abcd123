@@ -60,8 +60,8 @@ export const AuthProvider = ({ children }) => {
         setToken(data.access_token);
         localStorage.setItem('token', data.access_token);
         
-        // Fetch user profile after login
-        await fetchUserProfile();
+        // Set user directly from login response instead of fetching again
+        setUser(data.user);
         
         return { success: true };
       } else {

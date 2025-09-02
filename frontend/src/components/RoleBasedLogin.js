@@ -59,9 +59,9 @@ const RoleBasedLogin = ({ onBack }) => {
   ];
 
   const demoCredentials = {
-    manager: { username: 'manager1', password: 'manager123' },
-    doctor: { username: 'doctor1', password: 'doctor123' },
-    patient: { username: 'patient1', password: 'patient123' }
+    manager: { username: 'manager@medcare.com', password: 'manager123' },
+    doctor: { username: 'doctor@medcare.com', password: 'doctor123' },
+    patient: { username: 'patient@medcare.com', password: 'patient123' }
   };
 
   const handleRoleSelect = (role) => {
