@@ -71,12 +71,12 @@ export const coldChainAPI = {
 };
 
 // Inventory API
-export const inventoryAPI = {
-  getInventory: () => api.get('/inventory'),
-  getInventoryStats: () => api.get('/inventory/stats'),
-  addInventoryItem: (itemData) => api.post('/inventory', itemData),
-  updateInventoryItem: (itemID, itemData) => api.put(`/inventory/${itemID}`, itemData),
-  deleteInventoryItem: (itemID) => api.delete(`/inventory/${itemID}`),
+export const storageAPI = {
+  getInventory: () => api.get('/storage'),
+  getInventoryStats: () => api.get('/storage/stats'),
+  addInventoryItem: (itemData) => api.post('/storage', itemData),
+  updateInventoryItem: (itemID, itemData) => api.put(`/storage/${itemID}`, itemData),
+  deleteInventoryItem: (itemID) => api.delete(`/storage/${itemID}`),
 };
 
 // Blockchain API

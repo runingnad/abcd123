@@ -108,235 +108,183 @@ const AIDrugVerification = () => {
   };
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
-      <VStack spacing={6} align="stretch">
-        {/* Header */}
-        <Box textAlign="center" py={8}>
-          <Text fontSize="3xl" fontWeight="bold" color="blue.600">
-            AI Drug Verification
-          </Text>
-          <Text fontSize="lg" color="gray.600">
-            Verify medications using advanced computer vision and AI
-          </Text>
-        </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center py-6">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          AI Drug Verification
+        </h2>
+        <p className="text-lg text-gray-600 mt-2">
+          Verify medications using advanced computer vision and AI
+        </p>
+      </div>
 
-        <HStack spacing={8} align="flex-start">
-          {/* Left Panel - Image Upload & Camera */}
-          <Card p={6} flex={1} shadow="lg">
-            <VStack spacing={4}>
-              <Text fontSize="xl" fontWeight="semibold">
-                Upload or Capture Image
-              </Text>
-              
-              {/* Image Preview */}
-              {imagePreview && (
-                <Box position="relative">
-                  <Image 
-                    src={imagePreview} 
-                    alt="Drug preview" 
-                    borderRadius="lg"
-                    maxH="300px"
-                    objectFit="contain"
-                  />
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    position="absolute"
-                    top={2}
-                    right={2}
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setImagePreview(null);
-                      setVerificationResult(null);
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </Box>
-              )}
-
-              {/* Upload Buttons */}
-              <HStack spacing={4} w="full">
-                <Button
-                  leftIcon={<Upload />}
-                  colorScheme="blue"
-                  variant="outline"
-                  flex={1}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Upload Image
-                </Button>
-                <Button
-                  leftIcon={<Camera />}
-                  colorScheme="green"
-                  variant="outline"
-                  flex={1}
-                  onClick={handleCameraCapture}
-                >
-                  Take Photo
-                </Button>
-              </HStack>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ display: 'none' }}
-              />
-
-              {/* Verify Button */}
-              <Button
-                colorScheme="purple"
-                size="lg"
-                w="full"
-                onClick={simulateVerification}
-                isLoading={isVerifying}
-                loadingText="Verifying..."
-                isDisabled={!selectedImage}
-              >
-                Verify Drug
-              </Button>
-            </VStack>
-          </Card>
-
-          {/* Right Panel - Results */}
-          <Card p={6} flex={1} shadow="lg">
-            <VStack spacing={4}>
-              <Text fontSize="xl" fontWeight="semibold">
-                Verification Results
-              </Text>
-
-              {verificationResult ? (
-                <VStack spacing={4} w="full">
-                  {/* Verification Status */}
-                  <HStack w="full" justify="space-between">
-                    <Text fontWeight="semibold">Status:</Text>
-                    <Badge
-                      colorScheme={verificationResult.verified ? "green" : "red"}
-                      size="lg"
-                      p={2}
-                    >
-                      {verificationResult.verified ? "VERIFIED" : "NOT VERIFIED"}
-                    </Badge>
-                  </HStack>
-
-                  {/* Confidence Score */}
-                  <Box w="full">
-                    <HStack justify="space-between" mb={2}>
-                      <Text fontWeight="semibold">Confidence:</Text>
-                      <Text color={getConfidenceColor(verificationResult.confidence_score)}>
-                        {(verificationResult.confidence_score * 100).toFixed(0)}%
-                      </Text>
-                    </HStack>
-                    <Progress
-                      value={verificationResult.confidence_score * 100}
-                      colorScheme={getConfidenceColor(verificationResult.confidence_score)}
-                      size="lg"
-                      borderRadius="full"
-                    />
-                  </Box>
-
-                  {/* Drug Details */}
-                  <VStack spacing={3} w="full" align="stretch">
-                    <HStack justify="space-between">
-                      <Text fontWeight="semibold">Drug Name:</Text>
-                      <Text>{verificationResult.detected_drug_name}</Text>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text fontWeight="semibold">Dosage:</Text>
-                      <Text>{verificationResult.detected_dosage}</Text>
-                    </HStack>
-                  </VStack>
-
-                  {/* Quality Metrics */}
-                  <VStack spacing={3} w="full" align="stretch">
-                    <Text fontWeight="semibold">Quality Assessment:</Text>
-                    <HStack justify="space-between">
-                      <Text>Label Quality:</Text>
-                      <Badge colorScheme={getQualityColor(verificationResult.label_quality)}>
-                        {verificationResult.label_quality}
-                      </Badge>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text>Color Match:</Text>
-                      <Badge colorScheme={getQualityColor(verificationResult.color_match)}>
-                        {verificationResult.color_match}
-                      </Badge>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text>Shape Match:</Text>
-                      <Badge colorScheme={getQualityColor(verificationResult.shape_match)}>
-                        {verificationResult.shape_match}
-                      </Badge>
-                    </HStack>
-                  </VStack>
-
-                  {/* Recommendations */}
-                  <Box w="full">
-                    <Text fontWeight="semibold" mb={2}>Recommendations:</Text>
-                    <VStack spacing={2} align="stretch">
-                      {verificationResult.recommendations.map((rec, index) => (
-                        <HStack key={index} spacing={2}>
-                          <CheckCircle size={16} color="green" />
-                          <Text fontSize="sm">{rec}</Text>
-                        </HStack>
-                      ))}
-                    </VStack>
-                  </Box>
-                </VStack>
-              ) : (
-                <Box textAlign="center" py={8}>
-                  <Info size={48} color="gray.400" />
-                  <Text color="gray.500" mt={4}>
-                    Upload or capture an image to verify
-                  </Text>
-                </Box>
-              )}
-            </VStack>
-          </Card>
-        </HStack>
-      </VStack>
-
-      {/* Camera Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Camera Capture</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <Box
-              ref={cameraRef}
-              bg="black"
-              h="400px"
-              borderRadius="lg"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              color="white"
-            >
-              <VStack spacing={4}>
-                <Camera size={64} />
-                <Text>Camera simulation - Click to capture</Text>
-                <Button
-                  colorScheme="blue"
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Panel - Image Upload & Camera */}
+        <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+          <div className="space-y-4">
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative">
+                <img 
+                  src={imagePreview} 
+                  alt="Drug preview" 
+                  className="max-h-72 w-full object-contain rounded-lg border border-gray-200"
+                />
+                <button
                   onClick={() => {
-                    // Simulate camera capture
-                    const mockImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2ltdWxhdGVkIENhbWVyYSBDYXB0dXJlPC90ZXh0Pjwvc3ZnPg==";
-                    setSelectedImage(mockImage);
-                    setImagePreview(mockImage);
+                    setSelectedImage(null);
+                    setImagePreview(null);
                     setVerificationResult(null);
-                    onClose();
                   }}
+                  className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
                 >
-                  Capture Photo
-                </Button>
-              </VStack>
-            </Box>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </Box>
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {/* Upload Buttons */}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                📤 Upload Image
+              </button>
+              <button
+                onClick={handleCameraCapture}
+                className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-green-300 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+              >
+                📷 Take Photo
+              </button>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+            />
+
+            {/* Verify Button */}
+            <button
+              onClick={simulateVerification}
+              disabled={!selectedImage || isVerifying}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50"
+            >
+              {isVerifying ? "Verifying..." : "🤖 Verify Drug"}
+            </button>
+          </div>
+        </div>
+
+        {/* Right Panel - Results */}
+        <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Verification Results</h3>
+
+          {verificationResult ? (
+            <div className="space-y-4">
+              {/* Verification Status */}
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Status:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  verificationResult.verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {verificationResult.verified ? "✅ VERIFIED" : "❌ NOT VERIFIED"}
+                </span>
+              </div>
+
+              {/* Confidence Score */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">Confidence:</span>
+                  <span className="font-bold text-lg">
+                    {(verificationResult.confidence_score * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full ${
+                      verificationResult.confidence_score >= 0.9 ? 'bg-green-500' :
+                      verificationResult.confidence_score >= 0.7 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{width: `${verificationResult.confidence_score * 100}%`}}
+                  />
+                </div>
+              </div>
+
+              {/* Drug Details */}
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold">Drug Name:</span>
+                  <span>{verificationResult.detected_drug_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Dosage:</span>
+                  <span>{verificationResult.detected_dosage}</span>
+                </div>
+              </div>
+
+              {/* Quality Metrics */}
+              <div className="space-y-2">
+                <p className="font-semibold">Quality Assessment:</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Label Quality:</span>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                      verificationResult.label_quality === 'Excellent' ? 'bg-green-100 text-green-800' :
+                      verificationResult.label_quality === 'Good' ? 'bg-blue-100 text-blue-800' :
+                      'bg-orange-100 text-orange-800'
+                    }`}>
+                      {verificationResult.label_quality}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Color Match:</span>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                      verificationResult.color_match === 'Perfect' ? 'bg-green-100 text-green-800' :
+                      verificationResult.color_match === 'Good' ? 'bg-blue-100 text-blue-800' :
+                      'bg-orange-100 text-orange-800'
+                    }`}>
+                      {verificationResult.color_match}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shape Match:</span>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                      verificationResult.shape_match === 'Exact' ? 'bg-green-100 text-green-800' :
+                      verificationResult.shape_match === 'Close' ? 'bg-blue-100 text-blue-800' :
+                      'bg-orange-100 text-orange-800'
+                    }`}>
+                      {verificationResult.shape_match}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <p className="font-semibold mb-2">Recommendations:</p>
+                <div className="space-y-2">
+                  {verificationResult.recommendations.map((rec, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">✓</span>
+                      <span className="text-sm">{rec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🤖</div>
+              <p className="text-gray-500 text-lg">Upload or capture an image to verify</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

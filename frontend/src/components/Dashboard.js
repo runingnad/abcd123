@@ -54,7 +54,7 @@ const Dashboard = ({ onLogout }) => {
   const batchIds = ['BATCH001', 'BATCH002', 'BATCH003'];
 
   // Mock data
-  const inventoryItems = [
+  const storageItems = [
     { id: 1, name: 'Amoxicillin 500mg', category: 'Antibiotics', stock: 45, maxStock: 50, price: 45.99, status: 'low' },
     { id: 2, name: 'Surgical Gloves (Box)', category: 'Consumables', stock: 156, maxStock: 100, price: 23.5, status: 'good' },
     { id: 3, name: 'Insulin Pens', category: 'Diabetes Care', stock: 12, maxStock: 25, price: 89.99, status: 'critical' },
@@ -74,7 +74,7 @@ const Dashboard = ({ onLogout }) => {
   const notifications = [
     { id: 1, type: 'clinical_trial', message: 'New drug batch BATCH003 awaiting approval', time: '2 min ago', severity: 'info', icon: TestTube },
     { id: 2, type: 'cold_chain', message: 'Temperature alert: BATCH003 exceeded safe range', time: '5 min ago', severity: 'warning', icon: Thermometer },
-    { id: 3, type: 'inventory', message: 'Amoxicillin 500mg is running low (45 units left)', time: '10 min ago', severity: 'warning', icon: Package },
+    { id: 3, type: 'storage', message: 'Amoxicillin 500mg is running low (45 units left)', time: '10 min ago', severity: 'warning', icon: Package },
     { id: 4, type: 'blockchain', message: 'New transaction recorded: BATCH001 approved', time: '15 min ago', severity: 'success', icon: Shield },
     { id: 5, type: 'expiry', message: 'Insulin Pens expire in 30 days', time: '1 hour ago', severity: 'warning', icon: AlertTriangle },
     { id: 6, type: 'critical', message: 'Insulin Pens below critical threshold (12 units)', time: '2 hours ago', severity: 'critical', icon: AlertTriangle },
@@ -83,7 +83,7 @@ const Dashboard = ({ onLogout }) => {
   const blockchainActivity = [
     { id: 1, type: 'stock_update', hash: '0x1a2b3c4d', item: 'Amoxicillin 500mg', action: 'Quantity updated: 50 → 45', time: '2 min ago', block: '12847592', contract: '0xE2DFC07f329041a05f5257f27CE01e4329FC64Ef' },
     { id: 2, type: 'purchase_order', hash: '0x5e6f7g8h', item: 'Surgical Gloves', action: 'Order created: 500 units', time: '15 min ago', block: '12847588', contract: '0xE2DFC07f329041a05f5257f27CE01e4329FC64Ef' },
-    { id: 3, type: 'item_added', hash: '0x9i0j1k2l', item: 'Blood Pressure Monitor', action: 'New item added to inventory', time: '1 hour ago', block: '12847585', contract: '0xE2DFC07f329041a05f5257f27CE01e4329FC64Ef' },
+    { id: 3, type: 'item_added', hash: '0x9i0j1k2l', item: 'Blood Pressure Monitor', action: 'New item added to storage', time: '1 hour ago', block: '12847585', contract: '0xE2DFC07f329041a05f5257f27CE01e4329FC64Ef' },
   ];
 
   const analyticsData = [
@@ -124,7 +124,7 @@ const Dashboard = ({ onLogout }) => {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'storage', label: 'Inventory', icon: Package },
     { id: 'clinical-trials', label: 'Clinical Trials', icon: TestTube },
     { id: 'coldchain', label: 'Cold Chain', icon: Thermometer },
     { id: 'ai-drug-verification', label: 'AI Drug Verification', icon: Camera },
@@ -999,7 +999,7 @@ const Dashboard = ({ onLogout }) => {
               </div>
             )}
 
-            {activeTab === 'inventory' && (
+            {activeTab === 'storage' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold text-gray-900">Inventory Management</h2>
@@ -1016,7 +1016,7 @@ const Dashboard = ({ onLogout }) => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                           type="text"
-                          placeholder="Search inventory..."
+                          placeholder="Search storage..."
                           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
@@ -1039,7 +1039,7 @@ const Dashboard = ({ onLogout }) => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {inventoryItems.map((item) => (
+                        {storageItems.map((item) => (
                           <tr key={item.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>

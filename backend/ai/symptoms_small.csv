@@ -1,0 +1,11 @@
+text,label
+"fever,cough,headache",flu
+"joint pain,rash,high fever",dengue
+"sneezing,runny nose,itchy eyes",allergy
+"fever,chills,body ache",malaria
+"nausea,vomiting,diarrhea",food poisoning
+"dry cough,fever,loss of smell",covid
+"chest pain,shortness of breath",heart disease
+"fatigue,weight loss,night sweats",tuberculosis
+"abdominal pain,bloating,gas",ibs
+"muscle weakness,tremors,stiffness",parkinsons

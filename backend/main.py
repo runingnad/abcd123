@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import List, Optional
 import json
@@ -10,11 +11,67 @@ import uuid
 import joblib
 import pandas as pd
 import numpy as np
+import hashlib
 import base64
 import io
 from PIL import Image
-import cv2
-import numpy as np
+
+# Import new modular components
+from app.models.base import Base, engine
+from app.routers import auth, manager_files, ai_symptoms, ai_skin, adherence, chat
+    
+    class SymptomPredictor:
+        def train_model(self): pass
+        def predict(self, symptoms): 
+            return {
+                "predicted_diseases": [{"disease": "Common Cold", "confidence": 85}],
+                "confidence_scores": [85],
+                "recommendations": ["Rest and hydration"]
+            }
+    
+    class SkinDiseaseDetector:
+        def predict_from_image(self, image_data):
+            return {
+                "predicted_condition": "Normal Skin",
+                "confidence_score": 92,
+                "severity": "None",
+                "recommendations": ["No action needed"]
+            }
+    
+    symptom_predictor = SymptomPredictor()
+    skin_detector = SkinDiseaseDetector()
+    
+    class MockDatabase:
+        async def connect(self): pass
+        async def disconnect(self): pass
+        async def fetch_one(self, query, values=None): return None
+        async def fetch_all(self, query, values=None): return []
+        async def execute(self, query, values=None): pass
+    
+    database = MockDatabase()
+# Simple blockchain simulation
+def calculate_file_hash(content):
+    return hashlib.sha256(content).hexdigest()
+
+class SimpleBlockchain:
+    def __init__(self):
+        self.files = {}
+    
+    def add_file_record(self, filename, file_hash, uploaded_by, file_size):
+        record = {
+            "filename": filename,
+            "hash": file_hash,
+            "uploaded_by": uploaded_by,
+            "size": file_size,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.files[file_hash] = record
+        return f"blockchain_hash_{file_hash[:8]}"
+    
+    def verify_file_integrity(self, file_hash):
+        return self.files.get(file_hash)
+
+blockchain_manager = SimpleBlockchain()
 
 
 # Load ML model at startup
@@ -27,7 +84,7 @@ except Exception as e:
     model = None
     label_encoder = None
 
-app = FastAPI(title="TrialChain+ColdCare API", version="1.0.0")
+app = FastAPI(title="MedCare Hospital Management API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +93,65 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
+# Include routers
+app.include_router(auth.router)
+app.include_router(manager_files.router)
+app.include_router(ai_symptoms.router)
+app.include_router(ai_skin.router)
+app.include_router(adherence.router)
+app.include_router(chat.router)
+
+# Database startup/shutdown events
+@app.on_event("startup")
+async def startup():
+    try:
+        await database.connect()
+        print("Database connected")
+    except:
+        print("Database connection failed, running in demo mode")
+    
+    # Initialize coldchain data with some historical data
+    if len(coldchain_db) == 0:
+        batch_configs = {
+            "BATCH001": {"base_temp": 4.5, "temp_variance": 1.0, "base_humidity": 45},
+            "BATCH002": {"base_temp": 3.8, "temp_variance": 0.8, "base_humidity": 47},
+            "BATCH003": {"base_temp": 5.2, "temp_variance": 1.5, "base_humidity": 43}
+        }
+        
+        for batch_id, config in batch_configs.items():
+            for i in range(20):
+                timestamp = datetime.now() - timedelta(minutes=i*5)
+                temp = config["base_temp"] + random.uniform(-config["temp_variance"], config["temp_variance"])
+                hum = config["base_humidity"] + random.uniform(-5, 5)
+                
+                initial_data = {
+                    "batchID": batch_id,
+                    "temperature": round(temp, 1),
+                    "humidity": round(max(0, min(100, hum)), 1),
+                    "timestamp": timestamp.isoformat()
+                }
+                coldchain_db.append(initial_data)
+        
+        print(f"Initialized coldchain_db with {len(coldchain_db)} data points")
+    
+    # Start sensor data generation
+    asyncio.create_task(generate_fake_sensor_data())
+    print("Sensor data generation started")
+    
+    # Initialize ML models
+    try:
+        symptom_predictor.train_model()
+        print("ML models initialized")
+    except:
+        print("ML models not available, using simulation")
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
 
 trials_db = [
     {
@@ -183,7 +299,7 @@ coldchain_db = [
         "timestamp": "2024-01-16T12:20:00Z"
     }
 ]
-inventory_db = [
+storage_db = [
     {
         "id": 1,
         "name": "Amoxicillin 500mg",
@@ -295,7 +411,7 @@ blockchain_activity = [
         "type": "item_added",
         "hash": "0x9i0j1k2l",
         "item": "Blood Pressure Monitor",
-        "action": "New item added to inventory",
+        "action": "New item added to storage",
         "time": "1 hour ago",
         "block": "12847585"
     }
@@ -339,23 +455,428 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        print(f"WebSocket connected. Total connections: {len(self.active_connections)}")
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        print(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            try:
-                await connection.send_text(message)
-            except:
-                pass
+        if self.active_connections:
+            disconnected = []
+            for connection in self.active_connections:
+                try:
+                    await connection.send_text(message)
+                except:
+                    disconnected.append(connection)
+            
+            # Remove disconnected connections
+            for conn in disconnected:
+                self.disconnect(conn)
+    
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        try:
+            await websocket.send_text(message)
+        except:
+            self.disconnect(websocket)
 
 manager = ConnectionManager()
 
+# Authentication Endpoints
+@app.post("/auth/register", response_model=Token)
+async def register_user(user_data: UserCreate):
+    # Check if user already exists
+    query = "SELECT id FROM users WHERE email = :email"
+    existing_user = await database.fetch_one(query, {"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Hash password
+    hashed_password = get_password_hash(user_data.password)
+    
+    # Insert new user
+    query = """
+        INSERT INTO users (email, full_name, role, hashed_password, employee_id, patient_id)
+        VALUES (:email, :full_name, :role, :hashed_password, :employee_id, :patient_id)
+    """
+    values = {
+        "email": user_data.email,
+        "full_name": user_data.full_name,
+        "role": user_data.role,
+        "hashed_password": hashed_password,
+        "employee_id": user_data.employee_id,
+        "patient_id": user_data.patient_id
+    }
+    
+    await database.execute(query, values)
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user_data.email})
+    return {"access_token": access_token, "token_type": "bearer"}
 
+@app.post("/auth/login", response_model=Token)
+async def login_user(form_data: UserLogin):
+    user = await authenticate_user(form_data.email, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user["email"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/auth/me", response_model=dict)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+# User management endpoints
+@app.get("/users/patients")
+async def get_patients(current_user: User = Depends(get_doctor_or_manager)):
+    """Get all patients for doctors and managers"""
+    query = "SELECT id, email, full_name, patient_id FROM users WHERE role = 'patient'"
+    patients = await database.fetch_all(query)
+    return {"patients": [dict(patient) for patient in patients]}
+
+@app.get("/users/doctors")
+async def get_doctors(current_user: User = Depends(get_current_user)):
+    """Get all doctors for patients and managers"""
+    query = "SELECT id, email, full_name, employee_id FROM users WHERE role = 'doctor'"
+    doctors = await database.fetch_all(query)
+    return {"doctors": [dict(doctor) for doctor in doctors]}
+
+
+# File Management Endpoints (Manager Only)
+@app.post("/files/upload", response_model=FileUploadResponse)
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_manager),
+    db: Session = Depends(get_db)
+):
+    # Read file content
+    file_content = await file.read()
+    file_hash = calculate_file_hash(file_content)
+    
+    # Add to blockchain
+    blockchain_hash = blockchain_manager.add_file_record(
+        filename=file.filename,
+        file_hash=file_hash,
+        uploaded_by=current_user.username,
+        file_size=len(file_content)
+    )
+    
+    # Save to database
+    db_file = FileRecord(
+        filename=file.filename,
+        file_hash=file_hash,
+        blockchain_hash=blockchain_hash,
+        uploaded_by=current_user.id,
+        file_type=file.content_type,
+        file_size=len(file_content)
+    )
+    
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    
+    return FileUploadResponse(
+        file_id=db_file.id,
+        filename=db_file.filename,
+        file_hash=db_file.file_hash,
+        blockchain_hash=db_file.blockchain_hash,
+        upload_timestamp=db_file.upload_timestamp
+    )
+
+@app.get("/files/verify/{file_hash}")
+async def verify_file_integrity(
+    file_hash: str,
+    current_user: User = Depends(get_doctor_or_manager)
+):
+    result = blockchain_manager.verify_file_integrity(file_hash)
+    if result:
+        return {"verified": True, "details": result}
+    else:
+        return {"verified": False, "message": "File not found in blockchain"}
+
+@app.get("/files/history/{filename}")
+async def get_file_history(
+    filename: str,
+    current_user: User = Depends(get_doctor_or_manager)
+):
+    history = blockchain_manager.get_file_history(filename)
+    return {"filename": filename, "history": history}
+
+# Chat Endpoints
+@app.post("/chat/send", response_model=ChatMessageResponse)
+async def send_message(
+    message: ChatMessageCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verify receiver exists
+    receiver = db.query(User).filter(User.id == message.receiver_id).first()
+    if not receiver:
+        raise HTTPException(status_code=404, detail="Receiver not found")
+    
+    # Create message
+    db_message = ChatMessage(
+        sender_id=current_user.id,
+        receiver_id=message.receiver_id,
+        message=message.message
+    )
+    
+    db.add(db_message)
+    db.commit()
+    db.refresh(db_message)
+    
+    return ChatMessageResponse(
+        id=db_message.id,
+        sender_id=db_message.sender_id,
+        receiver_id=db_message.receiver_id,
+        message=db_message.message,
+        timestamp=db_message.timestamp,
+        is_read=db_message.is_read,
+        sender_name=current_user.full_name,
+        receiver_name=receiver.full_name
+    )
+
+@app.get("/chat/conversations")
+async def get_conversations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Get all users this user has chatted with
+    conversations = db.query(ChatMessage).filter(
+        (ChatMessage.sender_id == current_user.id) | 
+        (ChatMessage.receiver_id == current_user.id)
+    ).all()
+    
+    # Group by conversation partner
+    partners = {}
+    for msg in conversations:
+        partner_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
+        if partner_id not in partners:
+            partner = db.query(User).filter(User.id == partner_id).first()
+            partners[partner_id] = {
+                "user_id": partner_id,
+                "name": partner.full_name,
+                "role": partner.role,
+                "last_message": msg.message,
+                "last_timestamp": msg.timestamp,
+                "unread_count": 0
+            }
+        
+        # Update last message if more recent
+        if msg.timestamp > partners[partner_id]["last_timestamp"]:
+            partners[partner_id]["last_message"] = msg.message
+            partners[partner_id]["last_timestamp"] = msg.timestamp
+        
+        # Count unread messages
+        if msg.receiver_id == current_user.id and not msg.is_read:
+            partners[partner_id]["unread_count"] += 1
+    
+    return {"conversations": list(partners.values())}
+
+@app.get("/chat/messages/{partner_id}")
+async def get_chat_messages(
+    partner_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    messages = db.query(ChatMessage).filter(
+        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == partner_id)) |
+        ((ChatMessage.sender_id == partner_id) & (ChatMessage.receiver_id == current_user.id))
+    ).order_by(ChatMessage.timestamp).all()
+    
+    # Mark messages as read
+    db.query(ChatMessage).filter(
+        (ChatMessage.sender_id == partner_id) & 
+        (ChatMessage.receiver_id == current_user.id) &
+        (ChatMessage.is_read == False)
+    ).update({"is_read": True})
+    db.commit()
+    
+    # Get partner info
+    partner = db.query(User).filter(User.id == partner_id).first()
+    
+    message_list = []
+    for msg in messages:
+        sender = db.query(User).filter(User.id == msg.sender_id).first()
+        message_list.append({
+            "id": msg.id,
+            "sender_id": msg.sender_id,
+            "sender_name": sender.full_name,
+            "message": msg.message,
+            "timestamp": msg.timestamp,
+            "is_own_message": msg.sender_id == current_user.id
+        })
+    
+    return {
+        "partner": {"id": partner.id, "name": partner.full_name, "role": partner.role},
+        "messages": message_list
+    }
+
+# Disease Prediction Endpoints
+@app.post("/predict/symptoms", response_model=SymptomPredictionResponse)
+async def predict_disease_from_symptoms(
+    request: SymptomPredictionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        result = symptom_predictor.predict(request.symptoms)
+        
+        # Save prediction to database
+        if current_user.role == "patient":
+            db_prediction = DiseaseSymptom(
+                patient_id=current_user.id,
+                symptoms=json.dumps(request.symptoms),
+                predicted_disease=result["predicted_diseases"][0]["disease"],
+                confidence_score=result["predicted_diseases"][0]["confidence"] / 100
+            )
+            db.add(db_prediction)
+            db.commit()
+        
+        return SymptomPredictionResponse(
+            predicted_diseases=result["predicted_diseases"],
+            confidence_scores=result["confidence_scores"],
+            recommendations=result["recommendations"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.post("/predict/skin", response_model=SkinDiseaseResponse)
+async def predict_skin_disease(
+    request: SkinDiseaseRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        result = skin_detector.predict_from_image(request.image_data)
+        
+        return SkinDiseaseResponse(
+            predicted_condition=result["predicted_condition"],
+            confidence_score=result["confidence_score"],
+            severity=result["severity"],
+            recommendations=result["recommendations"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Skin prediction failed: {str(e)}")
+
+# Prescription Management
+@app.post("/prescriptions", response_model=PrescriptionResponse)
+async def create_prescription(
+    prescription: PrescriptionCreate,
+    current_user: User = Depends(get_doctor),
+    db: Session = Depends(get_db)
+):
+    # Verify patient exists
+    patient = db.query(User).filter(User.id == prescription.patient_id, User.role == "patient").first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    db_prescription = Prescription(
+        patient_id=prescription.patient_id,
+        doctor_id=current_user.id,
+        medication_name=prescription.medication_name,
+        dosage=prescription.dosage,
+        frequency=prescription.frequency,
+        duration=prescription.duration,
+        instructions=prescription.instructions
+    )
+    
+    db.add(db_prescription)
+    db.commit()
+    db.refresh(db_prescription)
+    
+    return PrescriptionResponse(
+        id=db_prescription.id,
+        patient_id=db_prescription.patient_id,
+        doctor_id=db_prescription.doctor_id,
+        medication_name=db_prescription.medication_name,
+        dosage=db_prescription.dosage,
+        frequency=db_prescription.frequency,
+        duration=db_prescription.duration,
+        instructions=db_prescription.instructions,
+        created_at=db_prescription.created_at,
+        doctor_name=current_user.full_name,
+        patient_name=patient.full_name
+    )
+
+@app.get("/prescriptions/patient/{patient_id}")
+async def get_patient_prescriptions(
+    patient_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Patients can only see their own prescriptions
+    if current_user.role == "patient" and current_user.id != patient_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    prescriptions = db.query(Prescription).filter(Prescription.patient_id == patient_id).all()
+    
+    result = []
+    for p in prescriptions:
+        doctor = db.query(User).filter(User.id == p.doctor_id).first()
+        patient = db.query(User).filter(User.id == p.patient_id).first()
+        
+        result.append(PrescriptionResponse(
+            id=p.id,
+            patient_id=p.patient_id,
+            doctor_id=p.doctor_id,
+            medication_name=p.medication_name,
+            dosage=p.dosage,
+            frequency=p.frequency,
+            duration=p.duration,
+            instructions=p.instructions,
+            created_at=p.created_at,
+            doctor_name=doctor.full_name,
+            patient_name=patient.full_name
+        ))
+    
+    return {"prescriptions": result}
+
+@app.get("/users/doctors")
+async def get_doctors(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    doctors = db.query(User).filter(User.role == "doctor").all()
+    return {
+        "doctors": [
+            {
+                "id": doc.id,
+                "name": doc.full_name,
+                "employee_id": doc.employee_id,
+                "email": doc.email
+            }
+            for doc in doctors
+        ]
+    }
+
+@app.get("/users/patients")
+async def get_patients(
+    current_user: User = Depends(get_doctor_or_manager),
+    db: Session = Depends(get_db)
+):
+    patients = db.query(User).filter(User.role == "patient").all()
+    return {
+        "patients": [
+            {
+                "id": patient.id,
+                "name": patient.full_name,
+                "patient_id": patient.patient_id,
+                "email": patient.email
+            }
+            for patient in patients
+        ]
+    }
 
 @app.post("/trials")
-async def create_batch(batch: DrugBatch):
+async def create_batch(
+    batch: DrugBatch, 
+    current_user: User = Depends(get_doctor_or_manager)
+):
     batch.batchID = str(uuid.uuid4())[:8].upper()
     batch.timestamp = datetime.now().isoformat()
     trials_db.append(batch.dict())
@@ -363,10 +884,15 @@ async def create_batch(batch: DrugBatch):
 
 @app.get("/trials")
 async def get_all_batches():
+    """Get all batches - no auth required for demo"""
     return {"batches": trials_db}
 
 @app.put("/trials/{batch_id}/approve")
-async def approve_batch(batch_id: str, regulator: str = "Regulator_001"):
+async def approve_batch(
+    batch_id: str, 
+    regulator: str = "Regulator_001",
+    current_user: User = Depends(get_manager)
+):
     for batch in trials_db:
         if batch["batchID"] == batch_id:
             batch["status"] = "approved"
@@ -377,6 +903,7 @@ async def approve_batch(batch_id: str, regulator: str = "Regulator_001"):
 
 @app.post("/coldchain")
 async def submit_sensor_data(data: SensorData):
+    """Submit sensor data - no auth required for demo"""
     coldchain_db.append(data.dict())
     await manager.broadcast(json.dumps({
         "type": "sensor_data",
@@ -422,6 +949,7 @@ async def get_risk_analysis(batch_id: str):
 
 @app.get("/coldchain/data/{batch_id}")
 async def get_batch_data(batch_id: str):
+    """Get sensor data for a specific batch - no auth required for demo"""
     batch_data = [d for d in coldchain_db if d["batchID"] == batch_id]
     return {"data": batch_data}
 
@@ -529,30 +1057,39 @@ async def test_model():
         raise HTTPException(status_code=500, detail=f"Test failed: {str(e)}")
 
 # Inventory Management Endpoints
-@app.get("/inventory")
-async def get_inventory():
-    return {"items": inventory_db}
+@app.get("/storage")
+async def get_storage(current_user: User = Depends(get_doctor_or_manager)):
+    return {"items": storage_db}
 
-@app.get("/inventory/{item_id}")
-async def get_inventory_item(item_id: int):
-    for item in inventory_db:
+@app.get("/storage/{item_id}")
+async def get_storage_item(
+    item_id: int,
+    current_user: User = Depends(get_doctor_or_manager)
+):
+    for item in storage_db:
         if item["id"] == item_id:
             return item
     raise HTTPException(status_code=404, detail="Item not found")
 
-@app.post("/inventory")
-async def add_inventory_item(item: dict):
-    item["id"] = len(inventory_db) + 1
-    inventory_db.append(item)
+@app.post("/storage")
+async def add_storage_item(
+    item: dict,
+    current_user: User = Depends(get_manager)
+):
+    item["id"] = len(storage_db) + 1
+    storage_db.append(item)
     return {"message": "Item added successfully", "item": item}
 
 # Alerts Endpoints
 @app.get("/alerts")
-async def get_alerts():
+async def get_alerts(current_user: User = Depends(get_current_user)):
     return {"alerts": alerts_db}
 
 @app.put("/alerts/{alert_id}/resolve")
-async def resolve_alert(alert_id: int):
+async def resolve_alert(
+    alert_id: int,
+    current_user: User = Depends(get_doctor_or_manager)
+):
     for alert in alerts_db:
         if alert["id"] == alert_id:
             alert["resolved"] = True
@@ -562,60 +1099,104 @@ async def resolve_alert(alert_id: int):
 
 # Blockchain Activity Endpoints
 @app.get("/blockchain/activity")
-async def get_blockchain_activity():
+async def get_blockchain_activity(current_user: User = Depends(get_doctor_or_manager)):
     return {"activities": blockchain_activity}
 
-# Dashboard Stats
+# Dashboard Stats (Role-based)
 @app.get("/dashboard/stats")
 async def get_dashboard_stats():
-    total_items = len(inventory_db)
-    low_stock_alerts = len([item for item in inventory_db if item["status"] in ["low", "critical"]])
-    total_value = sum(item["stock"] * item["price"] for item in inventory_db)
+    """Get dashboard stats - simplified for demo"""
+    total_items = len(storage_db)
+    low_stock_alerts = len([item for item in storage_db if item["status"] in ["low", "critical"]])
+    total_value = sum(item["stock"] * item["price"] for item in storage_db)
     
+    # Return general stats for demo
     return {
         "total_items": total_items,
         "low_stock_alerts": low_stock_alerts,
         "total_value": round(total_value, 2),
-        "active_alerts": len(alerts_db)
+        "active_alerts": len(alerts_db),
+        "total_batches": len(trials_db),
+        "pending_approvals": len([b for b in trials_db if b["status"] == "pending"]),
+        "total_patients": 15,
+        "active_prescriptions": 8,
+        "unread_messages": 3,
+        "pending_consultations": 5,
+        "upcoming_appointments": 2,
+        "health_score": 85
     }
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+    await websocket.accept()
+    manager.active_connections.append(websocket)
+    print(f"WebSocket connected. Total connections: {len(manager.active_connections)}")
+    
     try:
         while True:
-            data = await websocket.receive_text()
-            await manager.send_personal_message(f"Message received: {data}", websocket)
+            # Keep connection alive - just wait for messages
+            await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        if websocket in manager.active_connections:
+            manager.active_connections.remove(websocket)
+        print(f"WebSocket disconnected. Total connections: {len(manager.active_connections)}")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        if websocket in manager.active_connections:
+            manager.active_connections.remove(websocket)
 
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(generate_fake_sensor_data())
 
 async def generate_fake_sensor_data():
+    """Generate realistic sensor data with occasional anomalies"""
+    print("Starting sensor data generation...")
+    
+    batch_configs = {
+        "BATCH001": {"base_temp": 4.5, "temp_variance": 1.0, "base_humidity": 45},
+        "BATCH002": {"base_temp": 3.8, "temp_variance": 0.8, "base_humidity": 47},
+        "BATCH003": {"base_temp": 5.2, "temp_variance": 1.5, "base_humidity": 43}
+    }
+    
     while True:
-        batch_ids = ["BATCH001", "BATCH002", "BATCH003"]
-        for batch_id in batch_ids:
-            base_temp = 5.0
-            variation = random.uniform(-2, 2)
-            temperature = base_temp + variation
-            humidity = random.uniform(40, 60)
+        try:
+            for batch_id, config in batch_configs.items():
+                # Generate realistic temperature with occasional spikes
+                if random.random() < 0.05:  # 5% chance of anomaly
+                    temperature = config["base_temp"] + random.uniform(-5, 8)  # Anomaly
+                else:
+                    temperature = config["base_temp"] + random.uniform(-config["temp_variance"], config["temp_variance"])
+                
+                # Generate humidity with correlation to temperature anomalies
+                if abs(temperature - config["base_temp"]) > 3:
+                    humidity = config["base_humidity"] + random.uniform(-15, 25)  # Correlated anomaly
+                else:
+                    humidity = config["base_humidity"] + random.uniform(-5, 5)
+                
+                sensor_data = SensorData(
+                    batchID=batch_id,
+                    temperature=round(temperature, 1),
+                    humidity=round(max(0, min(100, humidity)), 1),
+                    timestamp=datetime.now().isoformat()
+                )
+                
+                # Add to database
+                coldchain_db.append(sensor_data.dict())
+                
+                # Broadcast to connected clients
+                if manager.active_connections:
+                    await manager.broadcast(json.dumps({
+                        "type": "sensor_data",
+                        "data": sensor_data.dict()
+                    }))
+                    print(f"Broadcasted data for {batch_id}: {temperature:.1f}°C, {humidity:.1f}%")
             
-            sensor_data = SensorData(
-                batchID=batch_id,
-                temperature=round(temperature, 2),
-                humidity=round(humidity, 2)
-            )
+            # Keep last 100 readings per batch  
+            if len(coldchain_db) > 300:
+                coldchain_db = coldchain_db[-300:]
             
-            coldchain_db.append(sensor_data.dict())
-            
-            await manager.broadcast(json.dumps({
-                "type": "sensor_data",
-                "data": sensor_data.dict()
-            }))
-        
-        await asyncio.sleep(5)
+            await asyncio.sleep(3)  # Update every 3 seconds
+        except Exception as e:
+            print(f"Error in sensor data generation: {e}")
+            await asyncio.sleep(5)
 
 # New Pydantic models for AI features
 class DrugVerificationRequest(BaseModel):

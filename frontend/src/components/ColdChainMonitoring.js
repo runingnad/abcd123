@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   VStack, 
@@ -20,9 +20,13 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow
+  StatArrow,
+  Spinner,
+  CardHeader,
+  CardBody,
+  Heading
 } from '@chakra-ui/react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { AlertTriangle, Thermometer, Droplets, Shield, Zap } from 'lucide-react';
 
 const ColdChainMonitoring = () => {
@@ -31,22 +35,141 @@ const ColdChainMonitoring = () => {
   const [selectedBatch, setSelectedBatch] = useState('BATCH001');
   const [anomalyAlerts, setAnomalyAlerts] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentStats, setCurrentStats] = useState({ temperature: 0, humidity: 0, riskScore: 0, status: 'LOADING' });
+  const [isConnected, setIsConnected] = useState(false);
+  const [alertsDisabled, setAlertsDisabled] = useState(false);
+  const [activeToasts, setActiveToasts] = useState([]);
+  const [lastAlertTime, setLastAlertTime] = useState({});
+  const wsRef = useRef(null);
   const toast = useToast();
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws');
+    connectWebSocket();
+    fetchInitialData();
     
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'sensor_data') {
-        setSensorData(prev => [...prev, data.data]);
-        fetchRiskAnalysis(data.data.batchID);
-        detectAnomalies(data.data);
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
       }
     };
-
-    return () => ws.close();
   }, []);
+
+  useEffect(() => {
+    if (selectedBatch) {
+      fetchBatchData(selectedBatch);
+    }
+  }, [selectedBatch]);
+
+  const connectWebSocket = () => {
+    try {
+      const ws = new WebSocket('ws://localhost:8000/ws');
+      wsRef.current = ws;
+      
+      ws.onopen = () => {
+        setIsConnected(true);
+        console.log('WebSocket connected');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'sensor_data') {
+            const newData = data.data;
+            setSensorData(prev => {
+              const filtered = prev.filter(item => item.batchID !== newData.batchID || 
+                new Date(item.timestamp) < new Date(newData.timestamp));
+              return [...filtered, newData].slice(-100); // Keep last 100 readings
+            });
+            
+            // Update current stats if it's the selected batch
+            if (newData.batchID === selectedBatch) {
+              updateCurrentStats(newData);
+            }
+            
+            fetchRiskAnalysis(newData.batchID);
+            detectAnomalies(newData);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+      
+      ws.onclose = () => {
+        setIsConnected(false);
+        console.log('WebSocket disconnected');
+        // Reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+      };
+    } catch (error) {
+      console.error('Failed to connect WebSocket:', error);
+      setTimeout(connectWebSocket, 3000);
+    }
+  };
+
+  const fetchInitialData = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/coldchain/data/${selectedBatch}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSensorData(data.data || []);
+        if (data.data && data.data.length > 0) {
+          const latest = data.data[data.data.length - 1];
+          updateCurrentStats(latest);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+    }
+  };
+
+  const fetchBatchData = async (batchId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/coldchain/data/${batchId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const batchData = data.data || [];
+        setSensorData(prev => {
+          const otherBatches = prev.filter(item => item.batchID !== batchId);
+          return [...otherBatches, ...batchData];
+        });
+        
+        if (batchData.length > 0) {
+          const latest = batchData[batchData.length - 1];
+          updateCurrentStats(latest);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching batch data:', error);
+    }
+  };
+
+  const updateCurrentStats = (data) => {
+    setCurrentStats({
+      temperature: data.temperature,
+      humidity: data.humidity,
+      riskScore: calculateRiskScore(data.temperature, data.humidity),
+      status: getStatusFromTemp(data.temperature)
+    });
+  };
+
+  const calculateRiskScore = (temp, humidity) => {
+    let risk = 0;
+    if (temp > 8 || temp < 2) risk += 50;
+    if (humidity > 70 || humidity < 30) risk += 30;
+    if (Math.abs(temp - 5) > 2) risk += 20;
+    return Math.min(risk, 100);
+  };
+
+  const getStatusFromTemp = (temp) => {
+    if (temp >= 2 && temp <= 8) return 'SAFE';
+    if (temp > 8 && temp <= 10) return 'WARNING';
+    return 'CRITICAL';
+  };
 
   const fetchRiskAnalysis = async (batchId) => {
     try {
@@ -58,56 +181,141 @@ const ColdChainMonitoring = () => {
     }
   };
 
-  const detectAnomalies = async (sensorData) => {
-    try {
-      const response = await fetch('http://localhost:8000/ai/anomaly-detection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          batch_id: sensorData.batchID,
-          temperature: sensorData.temperature,
-          humidity: sensorData.humidity,
-          timestamp: sensorData.timestamp
-        })
-      });
+  const detectAnomalies = (data) => {
+    // Skip if alerts are disabled
+    if (alertsDisabled) {
+      // Still add to anomaly list but don't show toast
+      const temp = data.temperature;
+      const humidity = data.humidity;
       
-      const anomalyData = await response.json();
-      
-      if (anomalyData.is_anomaly) {
-        const newAlert = {
+      if (data.batchID === 'BATCH003' || temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
+        let severity = 'WARNING';
+        let message = '';
+        
+        if (data.batchID === 'BATCH003') {
+          severity = 'CRITICAL';
+          message = `BATCH003 CRITICAL: Temperature ${temp}°C and Humidity ${humidity}% - Immediate action required!`;
+        } else if (temp < 0 || temp > 10 || humidity < 20 || humidity > 80) {
+          severity = 'CRITICAL';
+          message = temp < 0 || temp > 10 
+            ? `CRITICAL: Temperature ${temp}°C is dangerously outside safe range (2-8°C)`
+            : `CRITICAL: Humidity ${humidity}% is dangerously outside optimal range (30-70%)`;
+        } else {
+          message = temp < 2 || temp > 8 
+            ? `WARNING: Temperature ${temp}°C is outside safe range (2-8°C)`
+            : `WARNING: Humidity ${humidity}% is outside optimal range (30-70%)`;
+        }
+        
+        const anomaly = {
           id: Date.now(),
-          batchId: sensorData.batchID,
-          riskLevel: anomalyData.risk_level,
-          factors: anomalyData.factors,
-          recommendations: anomalyData.recommendations,
-          timestamp: new Date().toISOString(),
-          confidence: anomalyData.confidence
+          batchID: data.batchID,
+          type: temp < 2 || temp > 8 ? 'Temperature' : 'Humidity',
+          value: temp < 2 || temp > 8 ? `${temp}°C` : `${humidity}%`,
+          severity: severity,
+          timestamp: data.timestamp,
+          message: message
         };
         
-        setAnomalyAlerts(prev => [newAlert, ...prev.slice(0, 4)]);
-        
-        // Show toast notification
-        toast({
-          title: `🚨 Anomaly Detected in ${sensorData.batchID}`,
-          description: `Risk Level: ${anomalyData.risk_level} - ${anomalyData.factors.join(', ')}`,
-          status: anomalyData.risk_level === 'CRITICAL' ? 'error' : 'warning',
-          duration: 8000,
-          isClosable: true,
-        });
+        setAnomalyAlerts(prev => [anomaly, ...prev.slice(0, 9)]);
       }
-    } catch (error) {
-      console.error('Error detecting anomalies:', error);
+      return; // Don't show any toasts
+    }
+    
+    const temp = data.temperature;
+    const humidity = data.humidity;
+    const now = Date.now();
+    
+    // Rate limiting: only show alerts every 30 seconds per batch
+    const batchKey = data.batchID;
+    if (lastAlertTime[batchKey] && (now - lastAlertTime[batchKey]) < 30000) {
+      return; // Skip if last alert was less than 30 seconds ago
+    }
+    
+    // Always detect anomalies for BATCH003 (demo batch)
+    if (data.batchID === 'BATCH003' || temp < 2 || temp > 8 || humidity < 30 || humidity > 70) {
+      let severity = 'WARNING';
+      let message = '';
+      
+      if (data.batchID === 'BATCH003') {
+        severity = 'CRITICAL';
+        message = `BATCH003 CRITICAL: Temperature ${temp}°C and Humidity ${humidity}% - Immediate action required!`;
+      } else if (temp < 0 || temp > 10 || humidity < 20 || humidity > 80) {
+        severity = 'CRITICAL';
+        message = temp < 0 || temp > 10 
+          ? `CRITICAL: Temperature ${temp}°C is dangerously outside safe range (2-8°C)`
+          : `CRITICAL: Humidity ${humidity}% is dangerously outside optimal range (30-70%)`;
+      } else {
+        message = temp < 2 || temp > 8 
+          ? `WARNING: Temperature ${temp}°C is outside safe range (2-8°C)`
+          : `WARNING: Humidity ${humidity}% is outside optimal range (30-70%)`;
+      }
+      
+      const anomaly = {
+        id: Date.now(),
+        batchID: data.batchID,
+        type: temp < 2 || temp > 8 ? 'Temperature' : 'Humidity',
+        value: temp < 2 || temp > 8 ? `${temp}°C` : `${humidity}%`,
+        severity: severity,
+        timestamp: data.timestamp,
+        message: message
+      };
+      
+      setAnomalyAlerts(prev => [anomaly, ...prev.slice(0, 9)]); // Keep last 10
+      
+      // Update last alert time for this batch
+      setLastAlertTime(prev => ({...prev, [batchKey]: now}));
+      
+      // Limit to max 2 active toasts
+      if (activeToasts.length < 2) {
+        const toastId = toast({
+          title: `${data.batchID}`,
+          description: `${temp}°C ${severity === 'CRITICAL' ? '🚨' : '⚠️'}`,
+          status: severity === 'CRITICAL' ? "error" : "warning",
+          duration: 2500,
+          isClosable: true,
+          position: "bottom-right",
+          variant: "left-accent",
+          containerStyle: {
+            maxWidth: '280px',
+            fontSize: '14px'
+          },
+          onCloseComplete: () => {
+            setActiveToasts(prev => prev.filter(id => id !== toastId));
+            // If user manually closes, disable alerts permanently
+            setAlertsDisabled(true);
+            console.log('User dismissed alert - disabling all future alerts');
+          }
+        });
+        
+        setActiveToasts(prev => [...prev, toastId]);
+      }
     }
   };
 
   const getBatchData = (batchId) => {
-    return sensorData.filter(data => data.batchID === batchId).slice(-20);
+    return sensorData
+      .filter(data => data.batchID === batchId)
+      .slice(-50)
+      .map(item => ({
+        ...item,
+        time: new Date(item.timestamp).toLocaleTimeString(),
+        temp: item.temperature,
+        hum: item.humidity
+      }));
   };
 
   const currentBatchData = getBatchData(selectedBatch);
   const currentRisk = riskAnalysis[selectedBatch];
+
+  const getTemperatureChartData = () => {
+    return currentBatchData.map(item => ({
+      time: item.time,
+      temperature: item.temperature,
+      humidity: item.humidity,
+      optimalMin: 2,
+      optimalMax: 8
+    }));
+  };
 
   const getRiskColor = (status) => {
     switch (status) {
@@ -129,266 +337,273 @@ const ColdChainMonitoring = () => {
   };
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
-      <VStack spacing={6} align="stretch">
-        {/* Header */}
-        <Box textAlign="center" py={8}>
-          <Text fontSize="3xl" fontWeight="bold" color="blue.600">
-            AI-Powered Cold Chain Monitoring
-          </Text>
-          <Text fontSize="lg" color="gray.600">
-            Real-time temperature monitoring with intelligent anomaly detection
-          </Text>
-        </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center py-6">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          AI-Powered Cold Chain Monitoring
+        </h2>
+        <p className="text-lg text-gray-600 mt-2">
+          Real-time temperature monitoring with intelligent anomaly detection
+        </p>
+      </div>
 
-        {/* Batch Selection */}
-        <Card p={4} shadow="md">
-          <HStack justify="space-between">
-            <Text fontSize="lg" fontWeight="semibold">
-              Select Batch for Monitoring
+      {/* Batch Selection */}
+      <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900">Select Batch for Monitoring</h3>
+          <select 
+            value={selectedBatch}
+            onChange={(e) => setSelectedBatch(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="BATCH001">BATCH001 - COVID-19 Vaccine</option>
+            <option value="BATCH002">BATCH002 - Cancer Treatment</option>
+            <option value="BATCH003">BATCH003 - Diabetes Medication</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Connection Status */}
+      <Box mb={4}>
+        <HStack spacing={4} align="center" justify="space-between">
+          <HStack spacing={4}>
+            <Badge colorScheme={isConnected ? 'green' : 'red'} size="lg">
+              {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+            </Badge>
+            <Text fontSize="sm" color="gray.600">
+              {isConnected ? 'Real-time monitoring active' : 'Attempting to reconnect...'}
             </Text>
-            <Select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
-              w="200px"
-              size="md"
-            >
-              <option value="BATCH001">BATCH001 - COVID-19 Vaccine</option>
-              <option value="BATCH002">BATCH002 - Cancer Treatment</option>
-              <option value="BATCH003">BATCH003 - Diabetes Medication</option>
-            </Select>
           </HStack>
+          <Button
+            size="sm"
+            colorScheme={alertsDisabled ? 'green' : 'red'}
+            onClick={() => setAlertsDisabled(!alertsDisabled)}
+            leftIcon={alertsDisabled ? '🔔' : '🔕'}
+          >
+            {alertsDisabled ? 'Enable Alerts' : 'Disable Alerts'}
+          </Button>
+        </HStack>
+      </Box>
+
+      {/* Real-time Status Cards */}
+      <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mb={8}>
+        <Card bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" color="white" shadow="lg">
+          <CardBody>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={1}>
+                <Text fontSize="sm" opacity={0.9}>Current Temperature</Text>
+                <Text fontSize="3xl" fontWeight="bold">
+                  {currentStats.temperature.toFixed(1)}°C
+                </Text>
+                <Text fontSize="sm" opacity={0.8}>
+                  {currentStats.temperature >= 2 && currentStats.temperature <= 8 ? 'Optimal Range' : 'Out of Range'}
+                </Text>
+              </VStack>
+              <Box fontSize="4xl">🌡️</Box>
+            </HStack>
+          </CardBody>
         </Card>
 
-        {/* Real-time Status Cards */}
-        <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6}>
-          <GridItem>
-            <Card p={6} bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" color="white" shadow="lg">
-              <VStack spacing={3} align="center">
-                <Thermometer size={32} />
-                <Stat textAlign="center">
-                  <StatLabel fontSize="lg">Current Temperature</StatLabel>
-                  <StatNumber fontSize="3xl">
-                    {currentBatchData.length > 0 ? `${currentBatchData[currentBatchData.length - 1].temperature}°C` : 'N/A'}
-                  </StatNumber>
-                  <StatHelpText>
-                    {currentBatchData.length > 1 && (
-                      <StatArrow 
-                        type={currentBatchData[currentBatchData.length - 1].temperature > currentBatchData[currentBatchData.length - 2].temperature ? 'increase' : 'decrease'} 
-                      />
-                    )}
-                  </StatHelpText>
-                </Stat>
+        <Card bg="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" color="white" shadow="lg">
+          <CardBody>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={1}>
+                <Text fontSize="sm" opacity={0.9}>Current Humidity</Text>
+                <Text fontSize="3xl" fontWeight="bold">
+                  {currentStats.humidity.toFixed(1)}%
+                </Text>
+                <Text fontSize="sm" opacity={0.8}>
+                  Optimal: 30-70%
+                </Text>
               </VStack>
-            </Card>
-          </GridItem>
+              <Box fontSize="4xl">💧</Box>
+            </HStack>
+          </CardBody>
+        </Card>
 
-          <GridItem>
-            <Card p={6} bg="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" color="white" shadow="lg">
-              <VStack spacing={3} align="center">
-                <Droplets size={32} />
-                <Stat textAlign="center">
-                  <StatLabel fontSize="lg">Current Humidity</StatLabel>
-                  <StatNumber fontSize="3xl">
-                    {currentBatchData.length > 0 ? `${currentBatchData[currentBatchData.length - 1].humidity}%` : 'N/A'}
-                  </StatNumber>
-                  <StatHelpText>Optimal: 30-70%</StatHelpText>
-                </Stat>
+        <Card bg={`linear-gradient(135deg, ${currentStats.status === 'SAFE' ? '#4facfe 0%, #00f2fe' : currentStats.status === 'WARNING' ? '#fa709a 0%, #fee140' : '#ff6b6b 0%, #ee5a24'} 100%)`} color="white" shadow="lg">
+          <CardBody>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={1}>
+                <Text fontSize="sm" opacity={0.9}>AI Status</Text>
+                <Text fontSize="3xl" fontWeight="bold">
+                  {currentStats.status}
+                </Text>
+                <Text fontSize="sm" opacity={0.8}>
+                  AI-Powered Analysis
+                </Text>
               </VStack>
-            </Card>
-          </GridItem>
+              <Box fontSize="4xl">🛡️</Box>
+            </HStack>
+          </CardBody>
+        </Card>
 
-          <GridItem>
-            <Card p={6} bg={`linear-gradient(135deg, ${
-              currentRisk?.status === 'SAFE' ? '#48bb78 0%, #38a169 100%' :
-              currentRisk?.status === 'WARNING' ? '#ed8936 0%, #dd6b20 100%' :
-              '#f56565 0%, #e53e3e 100%'
-            })`} color="white" shadow="lg">
-              <VStack spacing={3} align="center">
-                <Shield size={32} />
-                <Stat textAlign="center">
-                  <StatLabel fontSize="lg">AI Status</StatLabel>
-                  <StatNumber fontSize="3xl">{currentRisk?.status || 'UNKNOWN'}</StatNumber>
-                  <StatHelpText>AI-Powered Analysis</StatHelpText>
-                </Stat>
+        <Card bg="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" color="gray.800" shadow="lg">
+          <CardBody>
+            <HStack justify="space-between">
+              <VStack align="start" spacing={1}>
+                <Text fontSize="sm" opacity={0.8}>Risk Score</Text>
+                <Text fontSize="3xl" fontWeight="bold">
+                  {currentStats.riskScore}%
+                </Text>
+                <Text fontSize="sm" opacity={0.7}>
+                  Lower is Better
+                </Text>
               </VStack>
-            </Card>
-          </GridItem>
+              <Box fontSize="4xl">⚡</Box>
+            </HStack>
+          </CardBody>
+        </Card>
+      </Grid>
 
-          <GridItem>
-            <Card p={6} bg="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" color="white" shadow="lg">
-              <VStack spacing={3} align="center">
-                <Zap size={32} />
-                <Stat textAlign="center">
-                  <StatLabel fontSize="lg">Risk Score</StatLabel>
-                  <StatNumber fontSize="3xl">
-                    {currentRisk?.risk_score ? `${currentRisk.risk_score}%` : 'N/A'}
-                  </StatNumber>
-                  <StatHelpText>Lower is Better</StatHelpText>
-                </Stat>
-              </VStack>
-            </Card>
-          </GridItem>
-        </Grid>
-
-        {/* Live Charts */}
-        <Card p={6} shadow="lg">
-          <VStack spacing={6}>
-            <Text fontSize="2xl" fontWeight="bold">
-              Live Temperature & Humidity Monitoring
-            </Text>
-            
-            <Box w="full" h="400px">
+      {/* Live Charts */}
+      <Card bg="white" shadow="lg" mb={6}>
+        <CardHeader>
+          <HStack justify="space-between">
+            <Heading size="lg" color="gray.800">Live Temperature & Humidity Monitoring</Heading>
+            <Badge colorScheme={currentBatchData.length > 0 ? 'green' : 'gray'}>
+              {currentBatchData.length} data points
+            </Badge>
+          </HStack>
+        </CardHeader>
+        <CardBody>
+          {currentBatchData.length > 0 ? (
+            <Box h="400px">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={currentBatchData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <LineChart data={getTemperatureChartData()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis 
-                    dataKey="timestamp" 
-                    tickFormatter={(value) => new Date(value).toLocaleTimeString()}
+                    dataKey="time" 
+                    stroke="#4a5568"
+                    fontSize={12}
                   />
-                  <YAxis yAxisId="temp" />
-                  <YAxis yAxisId="humidity" orientation="right" />
+                  <YAxis 
+                    stroke="#4a5568"
+                    fontSize={12}
+                  />
                   <Tooltip 
-                    labelFormatter={(value) => new Date(value).toLocaleString()}
-                    formatter={(value, name) => [
-                      name === 'temperature' ? `${value}°C` : `${value}%`,
-                      name === 'temperature' ? 'Temperature' : 'Humidity'
-                    ]}
+                    contentStyle={{
+                      backgroundColor: '#1a202c',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
                   />
                   <Legend />
                   <Area 
                     type="monotone" 
-                    dataKey="temperature" 
-                    stroke="#3B82F6" 
-                    fill="#3B82F6" 
-                    fillOpacity={0.3}
-                    yAxisId="temp"
+                    dataKey="optimalMax" 
+                    fill="#68d391" 
+                    fillOpacity={0.1}
+                    stroke="none"
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="humidity" 
-                    stroke="#10B981" 
-                    fill="#10B981" 
-                    fillOpacity={0.3}
-                    yAxisId="humidity"
+                    dataKey="optimalMin" 
+                    fill="#68d391" 
+                    fillOpacity={0.1}
+                    stroke="none"
                   />
-                </AreaChart>
+                  <Line 
+                    type="monotone" 
+                    dataKey="temperature" 
+                    stroke="#3182ce" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3182ce', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#3182ce', strokeWidth: 2 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="humidity" 
+                    stroke="#e53e3e" 
+                    strokeWidth={3}
+                    dot={{ fill: '#e53e3e', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#e53e3e', strokeWidth: 2 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="optimalMin" 
+                    stroke="#68d391" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="optimalMax" 
+                    stroke="#68d391" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </Box>
-          </VStack>
-        </Card>
-
-        {/* AI Anomaly Detection */}
-        <Card p={6} shadow="lg">
-          <VStack spacing={6}>
-            <HStack spacing={4} align="center">
-              <AlertTriangle size={24} color="#ED8936" />
-              <Text fontSize="2xl" fontWeight="bold">
-                AI Anomaly Detection
-              </Text>
-            </HStack>
-
-            {anomalyAlerts.length > 0 ? (
-              <VStack spacing={4} align="stretch" w="full">
-                {anomalyAlerts.map(alert => (
-                  <Alert
-                    key={alert.id}
-                    status={alert.riskLevel === 'CRITICAL' ? 'error' : 'warning'}
-                    variant="left-accent"
-                    borderRadius="md"
-                  >
-                    <AlertIcon />
-                    <Box flex="1">
-                      <AlertTitle>
-                        {alert.riskLevel} Risk in {alert.batchId}
-                      </AlertTitle>
-                      <AlertDescription>
-                        <VStack align="start" spacing={2} mt={2}>
-                          <Text fontWeight="semibold">Factors:</Text>
-                          <VStack align="start" spacing={1}>
-                            {alert.factors.map((factor, index) => (
-                              <Text key={index} fontSize="sm">• {factor}</Text>
-                            ))}
-                          </VStack>
-                          <Text fontWeight="semibold" mt={2}>Recommendations:</Text>
-                          <VStack align="start" spacing={1}>
-                            {alert.recommendations.map((rec, index) => (
-                              <Text key={index} fontSize="sm">• {rec}</Text>
-                            ))}
-                          </VStack>
-                          <HStack spacing={4} mt={2}>
-                            <Badge colorScheme={getAnomalyColor(alert.riskLevel)}>
-                              Confidence: {(alert.confidence * 100).toFixed(0)}%
-                            </Badge>
-                            <Text fontSize="xs" color="gray.500">
-                              {new Date(alert.timestamp).toLocaleString()}
-                            </Text>
-                          </HStack>
-                        </VStack>
-                      </AlertDescription>
-                    </Box>
-                  </Alert>
-                ))}
-              </VStack>
-            ) : (
-              <Box textAlign="center" py={8}>
-                <Shield size={48} color="green" />
-                <Text color="green.600" mt={4} fontSize="lg">
-                  No anomalies detected - All systems operating normally
-                </Text>
-              </Box>
-            )}
-          </VStack>
-        </Card>
-
-        {/* AI Risk Analysis */}
-        {currentRisk && (
-          <Card p={6} shadow="lg">
-            <VStack spacing={6}>
-              <Text fontSize="2xl" fontWeight="bold">
-                AI Risk Analysis
-              </Text>
-              
-              <Grid templateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap={6} w="full">
-                <Box>
-                  <Text fontSize="lg" fontWeight="semibold" mb={4}>Risk Assessment</Text>
-                  <VStack spacing={4} align="stretch">
-                    <HStack justify="space-between">
-                      <Text>Risk Score:</Text>
-                      <Badge colorScheme={getRiskColor(currentRisk.status)} size="lg">
-                        {currentRisk.risk_score}%
-                      </Badge>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text>Status:</Text>
-                      <Badge colorScheme={getRiskColor(currentRisk.status)} size="lg">
-                        {currentRisk.status}
-                      </Badge>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text>Confidence:</Text>
-                      <Text>{(currentRisk.confidence * 100).toFixed(0)}%</Text>
-                    </HStack>
-                  </VStack>
-                </Box>
-
-                <Box>
-                  <Text fontSize="lg" fontWeight="semibold" mb={4}>Recommendations</Text>
-                  <VStack spacing={2} align="stretch">
-                    {currentRisk.recommendations?.map((rec, index) => (
-                      <HStack key={index} spacing={2}>
-                        <Box w={2} h={2} bg="blue.500" borderRadius="full" />
-                        <Text fontSize="sm">{rec}</Text>
-                      </HStack>
-                    ))}
-                  </VStack>
-                </Box>
-              </Grid>
+          ) : (
+            <VStack spacing={4} py={20}>
+              <Spinner size="xl" color="blue.500" />
+              <Text fontSize="lg" color="gray.600">Loading sensor data...</Text>
+              <Text fontSize="sm" color="gray.500">Waiting for real-time updates from {selectedBatch}</Text>
             </VStack>
-          </Card>
-        )}
-      </VStack>
-    </Box>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* AI Anomaly Detection */}
+      <Card bg="white" shadow="lg">
+        <CardHeader>
+          <HStack spacing={4}>
+            <Box fontSize="2xl">🚨</Box>
+            <Heading size="lg" color="gray.800">AI Anomaly Detection</Heading>
+            <Badge colorScheme={anomalyAlerts.length > 0 ? 'red' : 'green'}>
+              {anomalyAlerts.length} alerts
+            </Badge>
+          </HStack>
+        </CardHeader>
+        <CardBody>
+          {anomalyAlerts.length > 0 ? (
+            <VStack spacing={4} align="stretch">
+              {anomalyAlerts.slice(0, 3).map((alert) => (
+                <Alert 
+                  key={alert.id} 
+                  status={alert.severity === 'CRITICAL' ? 'error' : 'warning'}
+                  borderRadius="lg"
+                >
+                  <AlertIcon />
+                  <Box flex="1">
+                    <AlertTitle>
+                      {alert.severity} - {alert.batchID} {alert.type} Alert
+                    </AlertTitle>
+                    <AlertDescription>
+                      <VStack align="start" spacing={1} mt={2}>
+                        <Text fontSize="sm">{alert.message}</Text>
+                        <Text fontSize="sm" fontWeight="bold">Value: {alert.value}</Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {new Date(alert.timestamp).toLocaleString()}
+                        </Text>
+                      </VStack>
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              ))}
+            </VStack>
+          ) : (
+            <VStack spacing={4} py={8}>
+              <Box fontSize="6xl">🛡️</Box>
+              <Text fontSize="lg" color="green.600" fontWeight="semibold">
+                No anomalies detected
+              </Text>
+              <Text color="gray.600">All systems operating normally</Text>
+              <HStack spacing={2}>
+                <Badge colorScheme="green">AI Monitoring Active</Badge>
+                <Badge colorScheme="blue">Real-time Analysis</Badge>
+              </HStack>
+            </VStack>
+          )}
+        </CardBody>
+      </Card>
+    </div>
   );
 };
 

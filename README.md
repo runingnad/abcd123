@@ -1,30 +1,62 @@
-# 🏥 MedCare - Healthcare Management System
+# 🏥 MedCare - Complete Hospital Management System
 
-A comprehensive blockchain-powered healthcare management system with integrated clinical trial supply tracking and cold-chain monitoring capabilities.
+A comprehensive blockchain-powered hospital management system with role-based portals, AI-powered disease prediction, secure messaging, and integrated clinical operations.
 
 ## 🌟 Features
 
-### 🏠 Landing Page
-- **Modern, responsive design** with dynamic moving background
-- **Light/Dark mode toggle** (bottom-right corner)
-- **Professional healthcare branding** with MedCare logo
-- **Animated elements**: floating particles, gradient orbs, moving lines
-- **Call-to-action sections** with testimonials and statistics
+### 🔐 Role-Based Authentication System
+- **JWT-based secure authentication** with password hashing
+- **Three distinct user roles**: Hospital Manager, Doctor, Patient
+- **Demo credentials for testing**:
+  - **Manager**: manager@medcare.com / manager123
+  - **Doctor**: doctor@medcare.com / doctor123  
+  - **Patient**: patient@medcare.com / patient123
+- **Role-based access control** for all endpoints
 
-### 🔐 Authentication
-- **Dummy login system** for demonstration
-- **Credentials**: admin / admin123
-- **Secure session management**
+### 🏥 Hospital Manager Portal
+- **File Work Management** with blockchain verification
+- **Inventory Management** with real-time tracking
+- **Clinical Trials Oversight** with approval workflows
+- **Cold Chain Monitoring** with AI risk analysis
+- **AI Drug Verification** system
+- **Blockchain Activity Dashboard** for audit trails
 
-### 📊 Dashboard Overview
-- **Total Items**: 1,389 tracked items
-- **Low Stock Alerts**: Real-time notifications
-- **Monthly Usage**: $54,320 analytics
-- **Value**: $312,450 tracking
-- **Clinical Trials Status**: Active trial monitoring
-- **Cold Chain Monitoring**: Real-time temperature tracking
+### 👨‍⚕️ Doctor Portal
+- **Patient Adherence Monitoring** with detailed analytics
+- **Secure Patient Chat** for consultations
+- **AI Disease Prediction Tools**:
+  - Symptom-based diagnosis with ML models
+  - Skin/nail disease detection via image analysis
+- **Prescription Management** system
+- **Patient List Management** with conversation history
 
-### 📦 Management
+### 🏥 Patient Portal
+- **AI Symptom Checker** for self-diagnosis
+- **Skin Disease Analysis** via image upload
+- **Prescription Viewer** with medication tracking
+- **Secure Doctor Chat** for consultations
+- **Health Dashboard** with wellness metrics
+
+### 🤖 AI/ML Integration
+- **Symptom-Based Disease Prediction** using Random Forest classifier
+- **Skin/Nail Disease Detection** via image analysis
+- **ML Model Training** with healthcare datasets
+- **Confidence Scoring** for prediction reliability
+- **Treatment Recommendations** based on AI analysis
+
+### ⛓️ Blockchain Integration
+- **File Metadata Hashing** for immutable records
+- **SHA-256 Cryptographic Security** for file integrity
+- **Blockchain Activity Tracking** with audit trails
+- **File Verification System** for tamper detection
+
+### 💬 Secure Messaging System
+- **Doctor-Patient Chat** with real-time messaging
+- **Role-Based Chat Access** with proper authorization
+- **Message History** with timestamp tracking
+- **Unread Message Counters** for better UX
+
+### 📦 Inventory Management
 - **Add/Edit Items**: Complete CRUD operations
 - **Stock Tracking**: Real-time levels
 - **Category Management**: Antibiotics, Consumables, Diabetes Care, Equipment, Pain Management

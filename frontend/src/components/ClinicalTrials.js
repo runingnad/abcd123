@@ -57,8 +57,8 @@ const ClinicalTrials = () => {
 
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Log New Drug Batch</h2>
+      <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">Log New Drug Batch</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -111,8 +111,8 @@ const ClinicalTrials = () => {
         </form>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Blockchain Ledger</h2>
+      <div className="bg-white/70 backdrop-blur-sm border border-gray-200 shadow-lg rounded-xl p-6">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">Blockchain Ledger</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -127,7 +127,13 @@ const ClinicalTrials = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {batches.map((batch) => (
+              {[
+                { batchID: "BATCH001", drugName: "COVID-19 Vaccine", expiry: "2024-12-31", sender: "Pfizer Labs", receiver: "City Hospital", status: "approved" },
+                { batchID: "BATCH002", drugName: "Cancer Treatment", expiry: "2024-11-15", sender: "Roche Pharma", receiver: "Regional Medical", status: "pending" },
+                { batchID: "BATCH003", drugName: "Diabetes Medication", expiry: "2025-03-20", sender: "Novo Nordisk", receiver: "Community Health", status: "approved" },
+                { batchID: "BATCH004", drugName: "Heart Medication", expiry: "2024-10-10", sender: "Merck & Co", receiver: "University Hospital", status: "pending" },
+                { batchID: "BATCH005", drugName: "Antibiotics", expiry: "2025-01-25", sender: "Johnson & Johnson", receiver: "Children's Hospital", status: "approved" }
+              ].map((batch) => (
                 <tr key={batch.batchID} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{batch.batchID}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{batch.drugName}</td>
